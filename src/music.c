@@ -1611,35 +1611,68 @@ static void drawPianoFrames(Music* music, s32 x, s32 y)
 {
     tic_mem* tic = music->tic;
 
-    enum {Width = 66, Height = 106};
+    enum {Width = 66, Height = 106, Header = 10, ColWidth = TIC_FONT_WIDTH * 2 + 1};
 
     drawEditPanel(music, x, y, Width, Height);
 
     tic_api_print(tic, "FRM", x + 1, y + 2, tic_color_14, true, 1, true);
 
+
     {
+        const tic_sound_state* pos = getMusicPos(music);
+        s32 frame = pos->music.track == music->track ? pos->music.frame : -1;
+
         char index[] = "99";
         for(s32 i = 0; i < MUSIC_FRAMES; i++)
         {
             sprintf(index, "%02i", i);
-            tic_api_print(tic, index, x + 1, y + 10 + i * TIC_FONT_HEIGHT, tic_color_15, true, 1, false);
-        }        
+            tic_api_print(tic, index, x + 1, y + Header + i * TIC_FONT_HEIGHT, frame == i ? tic_color_12 : tic_color_15, true, 1, false);
+        }
+
+        if(frame >= 0)
+        {
+            static const u8 Icon[] =
+            {
+                0b00000000,
+                0b01000000,
+                0b01100000,
+                0b01110000,
+                0b01100000,
+                0b01000000,
+                0b00000000,
+                0b00000000,
+            };
+
+            drawBitIcon(x - TIC_ALTFONT_WIDTH, y + frame * TIC_FONT_HEIGHT + Header, Icon, tic_color_0);
+            drawBitIcon(x - TIC_ALTFONT_WIDTH, y + frame * TIC_FONT_HEIGHT + (Header - 1), Icon, tic_color_12);                
+        }
     }
+
+    x += ColWidth + 1;
 
     for(s32 c = 0; c < TIC_SOUND_CHANNELS; c++)
     {
-        tic_api_rect(tic, x + 14 + c * 13, y + 1, 13, MUSIC_FRAMES * TIC_FONT_HEIGHT + 9, c & 1 ? tic_color_0 : tic_color_15);
+        tic_api_rect(tic, x + c * ColWidth, y + 1, 
+            ColWidth, MUSIC_FRAMES * TIC_FONT_HEIGHT + (Header - 1), c & 1 ? tic_color_0 : tic_color_15);
 
-        tic_api_print(tic, (char[]){'1' + c}, x + 19 + c * 13, y + 2, c & 1 ? tic_color_14 : tic_color_0, true, 1, true);
+        tic_api_print(tic, (char[]){'1' + c}, x + (ColWidth - (TIC_ALTFONT_WIDTH - 1)) / 2 + c * ColWidth, y + 2, 
+            tic_color_14, true, 1, true);
 
-        char index[] = "--";
         for(s32 i = 0; i < MUSIC_FRAMES; i++)
         {
-            tic_api_print(tic, index, x + 15 + c * 13, y + 10 + i * TIC_FONT_HEIGHT, c & 1 ? tic_color_15 : tic_color_14, true, 1, false);
+            char index[] = "--";
+
+            s32 pattern = tic_tool_get_pattern_id(getTrack(music), i, c);
+
+            if(pattern)
+                sprintf(index, "%02i", pattern);
+
+            tic_api_print(tic, index, x + 1 + c * ColWidth, y + Header + i * TIC_FONT_HEIGHT, 
+                c & 1 ? tic_color_15 : tic_color_14, true, 1, false);
         }
 
         // !TODO: move to drawPianoStatus
-        drawTumbler(music, x + 17 + c * 13, y + 110, c);
+        drawTumbler(music, x + 3 + c * ColWidth, y + 110, c);
     }
 }
 
