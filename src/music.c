@@ -68,6 +68,8 @@ static void drawEditPanel(Music* music, s32 x, s32 y, s32 w, s32 h)
     tic_api_rect(tic, x-1, y, 1, h, tic_color_15);
     tic_api_rect(tic, x, y+h, w, 1, tic_color_13);
     tic_api_rect(tic, x+w, y, 1, h, tic_color_13);
+
+    tic_api_rect(tic, x, y, w, h, tic_color_0);
 }
 
 static void drawEditbox(Music* music, s32 x, s32 y, s32 value, void(*set)(Music*, s32, s32 channel), s32 channel)
@@ -136,7 +138,6 @@ static void drawEditbox(Music* music, s32 x, s32 y, s32 value, void(*set)(Music*
             }
         }
 
-        tic_api_rect(music->tic, rect.x, rect.y, rect.w, rect.h, tic_color_0);
         drawEditPanel(music, rect.x, rect.y, rect.w, rect.h);
 
         if(music->tracker.row == -1 && music->tracker.col / CHANNEL_COLS == channel)
@@ -1215,7 +1216,6 @@ static void drawTrackerFrames(Music* music, s32 x, s32 y)
             }
         }
 
-        tic_api_rect(music->tic, rect.x, rect.y, rect.w, rect.h, tic_color_0);
         drawEditPanel(music, rect.x, rect.y, rect.w, rect.h);
     }
 
@@ -1327,7 +1327,6 @@ static void drawTrackerChannel(Music* music, s32 x, s32 y, s32 channel)
         }
     }
 
-    tic_api_rect(music->tic, rect.x, rect.y, rect.w, rect.h, tic_color_0);
     drawEditPanel(music, rect.x, rect.y, rect.w, rect.h);
 
     s32 start = music->tracker.scroll;
@@ -1439,7 +1438,6 @@ static void drawTumbler(Music* music, s32 x, s32 y, s32 index)
     }
 
     drawEditPanel(music, x, y, Width, Height);
-    tic_api_rect(tic, x, y, Width, Height, tic_color_0);
 
     u8 color = tic_color_0;
     tic_api_spr(tic, &getConfig()->cart->bank0.tiles, music->tracker.on[index] ? On : Off, x, y, 1, 1, &color, 1, 1, tic_no_flip, tic_no_rotate);
@@ -1609,11 +1607,54 @@ static void drawMusicToolbar(Music* music)
     drawModeTabs(music);
 }
 
+static void drawPianoFrames(Music* music, s32 x, s32 y)
+{
+    tic_mem* tic = music->tic;
+
+    enum {Width = 66, Height = 106};
+
+    drawEditPanel(music, x, y, Width, Height);
+
+    tic_api_print(tic, "FRM", x + 1, y + 2, tic_color_14, true, 1, true);
+
+    {
+        char index[] = "99";
+        for(s32 i = 0; i < MUSIC_FRAMES; i++)
+        {
+            sprintf(index, "%02i", i);
+            tic_api_print(tic, index, x + 1, y + 10 + i * TIC_FONT_HEIGHT, tic_color_15, true, 1, false);
+        }        
+    }
+
+    for(s32 c = 0; c < TIC_SOUND_CHANNELS; c++)
+    {
+        tic_api_rect(tic, x + 14 + c * 13, y + 1, 13, MUSIC_FRAMES * TIC_FONT_HEIGHT + 9, c & 1 ? tic_color_0 : tic_color_15);
+
+        tic_api_print(tic, (char[]){'1' + c}, x + 19 + c * 13, y + 2, c & 1 ? tic_color_14 : tic_color_0, true, 1, true);
+
+        char index[] = "--";
+        for(s32 i = 0; i < MUSIC_FRAMES; i++)
+        {
+            tic_api_print(tic, index, x + 15 + c * 13, y + 10 + i * TIC_FONT_HEIGHT, c & 1 ? tic_color_15 : tic_color_14, true, 1, false);
+        }
+
+        // !TODO: move to drawPianoStatus
+        drawTumbler(music, x + 17 + c * 13, y + 110, c);
+    }
+}
+
+static void drawPianoPattern(Music* music, s32 x, s32 y)
+{
+    enum {Width = 164, Height = 106};
+    
+    drawEditPanel(music, x, y, Width, Height);
+}
+
 static void drawPianoLayout(Music* music)
 {
-    tic_api_cls(music->tic, tic_color_14);
+    drawPianoFrames(music, 3, 20);
 
-
+    drawPianoPattern(music, 73, 20);
 }
 
 static void scrollNotes(Music* music, s32 delta)
@@ -1654,8 +1695,6 @@ static void drawWaveform(Music* music, s32 x, s32 y)
     enum{Width = 32, Height = 8, WaveRows = 1 << WAVE_VALUE_BITS};
 
     drawEditPanel(music, x, y, Width, Height);
-
-    tic_api_rect(tic, x, y, Width, Height, tic_color_0);
 
     // detect playing channels
     s32 channels = 0;
@@ -1728,11 +1767,7 @@ static void drawTrackerLayout(Music* music)
         }
     }
 
-    tic_api_cls(music->tic, tic_color_14);
-
-    drawTopPanel(music, 2, TOOLBAR_SIZE + 3);
     drawTracker(music, 7, 35);
-    drawWaveform(music, 205, 9);
 }
 
 static void tick(Music* music)
@@ -1742,6 +1777,10 @@ static void tick(Music* music)
     for (s32 i = 0; i < TIC_SOUND_CHANNELS; i++)
         if(!music->tracker.on[i])
             tic->ram.registers[i].volume = 0;
+
+    tic_api_cls(music->tic, tic_color_14);
+    drawTopPanel(music, 2, TOOLBAR_SIZE + 3);
+    drawWaveform(music, 205, 9);
 
     switch (music->tab)
     {
@@ -1804,7 +1843,7 @@ void initMusic(Music* music, tic_mem* tic, tic_music* src)
         },
 
         .tickCounter = 0,
-        .tab = MUSIC_TRACKER_TAB,
+        .tab = MUSIC_PIANO_TAB,
         .history = history_create(src, sizeof(tic_music)),
         .event = onStudioEvent,
     };
