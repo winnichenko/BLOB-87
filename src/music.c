@@ -30,7 +30,7 @@
 #define TRACKER_COLS (TIC_SOUND_CHANNELS * CHANNEL_COLS)
 
 #define CMD_STRING(_, c, ...) DEF2STR(c)
-static const char *MusicCommands = MUSIC_CMD_LIST(CMD_STRING);
+static const char MusicCommands[] = MUSIC_CMD_LIST(CMD_STRING);
 #undef CMD_STRING
 
 enum
@@ -826,14 +826,14 @@ static void processTrackerKeyboard(Music* music)
         }
     }
 
-    if(keyWasPressed(tic_key_up))           upRow(music);
-    else if(keyWasPressed(tic_key_down))    downRow(music);
-    else if(keyWasPressed(tic_key_left))    leftCol(music);
-    else if(keyWasPressed(tic_key_right))   rightCol(music);
-    else if(keyWasPressed(tic_key_home))    goHome(music);
+    if(keyWasPressed(tic_key_up))               upRow(music);
+    else if(keyWasPressed(tic_key_down))        downRow(music);
+    else if(keyWasPressed(tic_key_left))        leftCol(music);
+    else if(keyWasPressed(tic_key_right))       rightCol(music);
+    else if(keyWasPressed(tic_key_home))        goHome(music);
     else if(keyWasPressed(tic_key_end))         goEnd(music);
-    else if(keyWasPressed(tic_key_pageup))  pageUp(music);
-    else if(keyWasPressed(tic_key_pagedown)) pageDown(music);
+    else if(keyWasPressed(tic_key_pageup))      pageUp(music);
+    else if(keyWasPressed(tic_key_pagedown))    pageDown(music);
     else if(keyWasPressed(tic_key_tab))         doTab(music);
     else if(keyWasPressed(tic_key_delete))      
     {
@@ -994,7 +994,7 @@ static void processTrackerKeyboard(Music* music)
 
                 if(sym)
                 {
-                    const char* val = strchr(MusicCommands, sym);
+                    const char* val = strchr(MusicCommands, toupper(sym));
                                 
                     if(val)
                         setCommand(music, val - MusicCommands);
@@ -1097,12 +1097,12 @@ static void processKeyboard(Music* music)
 
     if (ctrl)
     {
-        if(keyWasPressed(tic_key_a))        selectAll(music);
-        else if(keyWasPressed(tic_key_z))   undo(music);
-        else if(keyWasPressed(tic_key_y))   redo(music);
-        else if(keyWasPressed(tic_key_up))  upFrame(music);
-        else if(keyWasPressed(tic_key_down)) downFrame(music);
-        else if(keyWasPressed(tic_key_f)) toggleFollowMode(music);
+        if(keyWasPressed(tic_key_a))            selectAll(music);
+        else if(keyWasPressed(tic_key_z))       undo(music);
+        else if(keyWasPressed(tic_key_y))       redo(music);
+        else if(keyWasPressed(tic_key_up))      upFrame(music);
+        else if(keyWasPressed(tic_key_down))    downFrame(music);
+        else if(keyWasPressed(tic_key_f))       toggleFollowMode(music);
     }
     else
     {
@@ -1378,7 +1378,7 @@ static void drawTrackerChannel(Music* music, s32 x, s32 y, s32 channel)
                 sprintf(rowStr, "%s%i%02i---", Notes[note - NoteStart], octave + 1, sfx);
 
             if(row->command > tic_music_cmd_empty)
-                sprintf(rowStr+5, "%c%01X%01X", toupper(MusicCommands[row->command]), row->param1, row->param2);
+                sprintf(rowStr+5, "%c%01X%01X", MusicCommands[row->command], row->param1, row->param2);
 
             const u8 Colors[] = { tic_color_5, tic_color_4, tic_color_10 };
             const u8 DarkColors[] = { tic_color_6, tic_color_3, tic_color_9 };
@@ -1655,7 +1655,7 @@ static void drawPianoFrames(Music* music, s32 x, s32 y)
         tic_api_rect(tic, x + c * ColWidth, y + 1, 
             ColWidth, MUSIC_FRAMES * TIC_FONT_HEIGHT + (Header - 1), c & 1 ? tic_color_0 : tic_color_15);
 
-        tic_api_print(tic, (char[]){'1' + c}, x + (ColWidth - (TIC_ALTFONT_WIDTH - 1)) / 2 + c * ColWidth, y + 2, 
+        tic_api_print(tic, (char[]){'1' + c, '\0'}, x + (ColWidth - (TIC_ALTFONT_WIDTH - 1)) / 2 + c * ColWidth, y + 2, 
             tic_color_14, true, 1, true);
 
         for(s32 i = 0; i < MUSIC_FRAMES; i++)
@@ -1676,11 +1676,130 @@ static void drawPianoFrames(Music* music, s32 x, s32 y)
     }
 }
 
+static void drawStereoSeparator(Music* music, s32 x, s32 y)
+{
+    tic_mem* tic = music->tic;
+    static u8 Colors[] = 
+    {
+        tic_color_7, tic_color_6, tic_color_5, tic_color_5
+    };
+
+    for(s32 i = 0; i < COUNT_OF(Colors); i++)
+        tic_api_rect(tic, x + i * 4, y, 4, 1, Colors[i]);
+
+    for(s32 i = COUNT_OF(Colors)-1; i >= 0; i--)
+        tic_api_rect(tic, x + 27 - i * 4, y, 4, 1, Colors[i]);
+}
+
+static void drawPianoRoll(Music* music, s32 x, s32 y)
+{
+    tic_mem* tic = music->tic;
+
+    static const struct {u8 offset; u8 flip;} Buttons[] = 
+    {
+        {0, tic_no_flip},
+        {3, tic_horz_flip},
+        {8, tic_no_flip},
+        {11, tic_horz_flip},
+        {20, tic_no_flip},
+        {23, tic_horz_flip},
+        {28, tic_no_flip},
+        {31, tic_horz_flip},
+        {36, tic_no_flip},
+        {39, tic_horz_flip},
+    };
+
+    for(s32 i = 0; i < COUNT_OF(Buttons); i++)
+        tic_api_spr(tic, &getConfig()->cart->bank0.tiles, 45, 
+            x + Buttons[i].offset, y, 1, 1, (u8[]){tic_color_0}, 1, 1, Buttons[i].flip, tic_no_rotate);
+}
+
 static void drawPianoPattern(Music* music, s32 x, s32 y)
 {
-    enum {Width = 164, Height = 106};
+    tic_mem* tic = music->tic;
+
+    enum {Width = 164, Height = 106, Header = 10, Rows = 16, NoteWidth = 4, NoteHeight = 6};
     
     drawEditPanel(music, x, y, Width, Height);
+
+    // draw header
+    {
+        tic_api_print(tic, "ROW", x + 1, y + 2, tic_color_14, true, 1, true);
+        drawPianoRoll(music, x + 14, y + 1);
+
+        tic_api_print(tic, "OCTAVE", x + 67, y + 2, tic_color_14, true, 1, true);
+        drawStereoSeparator(music, x + 63, y + 8);
+
+        tic_api_rect(tic, x + 95, y + 1, TIC_FONT_WIDTH*2 + 1, Header + Rows * TIC_FONT_HEIGHT - 1, tic_color_15);
+        tic_api_print(tic, "SFX", x + 96, y + 2, tic_color_14, true, 1, true);
+
+        tic_api_print(tic, "COMMAND", x + 116, y + 2, tic_color_14, true, 1, true);
+        drawStereoSeparator(music, x + 114, y + 8);
+
+        tic_api_rect(tic, x + 151, y + 1, TIC_FONT_WIDTH*2 + 1, Header + Rows * TIC_FONT_HEIGHT - 1, tic_color_15);
+        tic_api_print(tic, "X", x + 153, y + 2, tic_color_14, true, 1, true);
+        tic_api_print(tic, "Y", x + 159, y + 2, tic_color_14, true, 1, true);
+    }
+
+    for(s32 r = 0; r < Rows; r++)
+    {
+        bool beat = (r + 1) % 4 == 0;
+
+        {
+            // !TODO: use MUSIC_PATTERN_ROWS here
+            // !TODO: highlight every 1/4 or 3/4 note
+            char index[] = "99";
+            sprintf(index, "%02i", r);
+            tic_api_print(tic, index, x + 1, y + Header + r * TIC_FONT_HEIGHT, beat ? tic_color_14 : tic_color_15, true, 1, false);
+        }
+
+        // draw piano roll
+        for(s32 n = 0; n < NOTES; n++)
+        {
+            tic_api_rect(tic, x + 14 + n * NoteWidth, y + Header + r * NoteHeight, NoteWidth - 1, NoteHeight - 1, tic_color_15);
+        }
+
+        if(beat)
+        {
+            static u8 Colors[NOTES] = 
+            {
+                tic_color_14, tic_color_14, tic_color_13, 
+                tic_color_13, tic_color_13, tic_color_12, 
+                tic_color_12, tic_color_13, tic_color_13, 
+                tic_color_13, tic_color_14, tic_color_14
+            };
+
+            for(s32 i = 0; i < COUNT_OF(Colors); i++)
+                tic_api_rect(tic, x + 14 + i * NoteWidth, y + r * NoteHeight + (Header + NoteHeight / 2 - 1), NoteWidth - 1, 1, Colors[i]);
+        }
+
+        // draw octaves
+        for(s32 n = 0; n < OCTAVES; n++)
+        {
+            tic_api_rect(tic, x + 63 + n * NoteWidth, y + Header + r * NoteHeight, NoteWidth - 1, NoteHeight - 1, tic_color_15);
+        }
+
+        if(beat)
+        {
+            static u8 Colors[OCTAVES] = 
+            {
+                tic_color_14, tic_color_14, tic_color_13, tic_color_12,
+                tic_color_12, tic_color_13, tic_color_14, tic_color_14
+            };
+
+            for(s32 i = 0; i < COUNT_OF(Colors); i++)
+                tic_api_rect(tic, x + 63 + i * NoteWidth, y + r * NoteHeight + (Header + NoteHeight / 2 - 1), NoteWidth - 1, 1, Colors[i]);            
+        }
+
+        // draw sfx
+        tic_api_print(tic, "--", x + 96, y + Header + r * NoteHeight, beat ? tic_color_13 : tic_color_14, true, 1, false);
+
+        // draw commands
+        tic_api_print(tic, MusicCommands+1, x + 109, y + Header + r * NoteHeight, beat ? tic_color_14 : tic_color_15, true, 1, false);
+
+        // draw XY
+        tic_api_print(tic, "--", x + 152, y + Header + r * NoteHeight, beat ? tic_color_13 : tic_color_14, true, 1, false);
+    }
 }
 
 static void drawPianoLayout(Music* music)
