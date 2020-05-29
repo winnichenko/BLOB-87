@@ -1743,7 +1743,7 @@ static void drawPianoPattern(Music* music, s32 x, s32 y)
 
     for(s32 r = 0; r < Rows; r++)
     {
-        bool beat = (r + 1) % 4 == 0;
+        bool beat = r % 4 == 0;
 
         {
             // !TODO: use MUSIC_PATTERN_ROWS here
