@@ -1440,7 +1440,8 @@ static void drawTumbler(Music* music, s32 x, s32 y, s32 index)
     drawEditPanel(music, x, y, Width, Height);
 
     u8 color = tic_color_0;
-    tic_api_spr(tic, &getConfig()->cart->bank0.tiles, music->tracker.on[index] ? On : Off, x, y, 1, 1, &color, 1, 1, tic_no_flip, tic_no_rotate);
+    tiles2ram(&tic->ram, &getConfig()->cart->bank0.tiles);
+    tic_api_spr(tic, music->tracker.on[index] ? On : Off, x, y, 1, 1, &color, 1, 1, tic_no_flip, tic_no_rotate);
 }
 
 static void drawTracker(Music* music, s32 x, s32 y)
@@ -1709,8 +1710,10 @@ static void drawPianoRoll(Music* music, s32 x, s32 y)
         {39, tic_horz_flip},
     };
 
+    tiles2ram(&tic->ram, &getConfig()->cart->bank0.tiles);
+
     for(s32 i = 0; i < COUNT_OF(Buttons); i++)
-        tic_api_spr(tic, &getConfig()->cart->bank0.tiles, 45, 
+        tic_api_spr(tic, 45, 
             x + Buttons[i].offset, y, 1, 1, (u8[]){tic_color_0}, 1, 1, Buttons[i].flip, tic_no_rotate);
 }
 

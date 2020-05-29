@@ -512,7 +512,7 @@ static s32 lua_spr(lua_State* lua)
 
     tic_mem* tic = (tic_mem*)getLuaMachine(lua);
 
-    tic_api_spr(tic, &tic->ram.tiles, index, x, y, w, h, colors, count, scale, flip, rotate);
+    tic_api_spr(tic, index, x, y, w, h, colors, count, scale, flip, rotate);
 
     return 0;
 }
@@ -528,7 +528,7 @@ static s32 lua_mget(lua_State* lua)
 
         tic_mem* tic = (tic_mem*)getLuaMachine(lua);
 
-        u8 value = tic_api_mget(tic, &tic->ram.map, x, y);
+        u8 value = tic_api_mget(tic, x, y);
         lua_pushinteger(lua, value);
         return 1;
     }
@@ -549,7 +549,7 @@ static s32 lua_mset(lua_State* lua)
 
         tic_mem* tic = (tic_mem*)getLuaMachine(lua);
 
-        tic_api_mset(tic, &tic->ram.map, x, y, val);
+        tic_api_mset(tic, x, y, val);
     }
     else luaL_error(lua, "invalid params, mget(x,y)\n");
 
@@ -647,7 +647,7 @@ static s32 lua_map(lua_State* lua)
 
                                 tic_mem* tic = (tic_mem*)getLuaMachine(lua);
 
-                                tic_api_map(tic, &tic->ram.map, &tic->ram.tiles, x, y, w, h, sx, sy, colors, count, scale, remapCallback, &data);
+                                tic_api_map(tic, x, y, w, h, sx, sy, colors, count, scale, remapCallback, &data);
 
                                 luaL_unref(lua, LUA_REGISTRYINDEX, data.reg);
 
@@ -662,7 +662,7 @@ static s32 lua_map(lua_State* lua)
 
     tic_mem* tic = (tic_mem*)getLuaMachine(lua);
 
-    tic_api_map((tic_mem*)getLuaMachine(lua), &tic->ram.map, &tic->ram.tiles, x, y, w, h, sx, sy, colors, count, scale, NULL, NULL);
+    tic_api_map((tic_mem*)getLuaMachine(lua), x, y, w, h, sx, sy, colors, count, scale, NULL, NULL);
 
     return 0;
 }
@@ -1707,6 +1707,7 @@ const tic_script_config* getMoonScriptConfig()
 
 static const char* execute_fennel_src = FENNEL_CODE(
   local opts = {filename="game", correlate=true, allowedGlobals=false}
+  for k,v in pairs(require("fennelfriend")) do opts[k] = v end
   local ok, msg = pcall(require('fennel').eval, ..., opts)
   if(not ok) then return msg end
 );
@@ -1756,10 +1757,11 @@ static bool initFennel(tic_mem* tic, const char* code)
 
 static const char* const FennelKeywords [] =
 {
-    "lua", "hashfn","macro", "macros",
+    "lua", "hashfn","macro", "macros", "macroexpand", "macrodebug",
     "do", "values", "if", "when", "each", "for", "fn", "lambda", "partial",
     "while", "set", "global", "var", "local", "let", "tset", "doto", "match",
     "or", "and", "true", "false", "nil", "not", "not=",
+    "rshift", "lshift", "bor", "band", "bnot" "bxor", "pick-values", "pick-args",
     ".", "..", "#", "...", ":", "->", "->>", "-?>", "-?>>", "$"
 };
 
