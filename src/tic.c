@@ -1906,7 +1906,6 @@ bool tic_api_keyp(tic_mem* tic, tic_key key, s32 hold, s32 period)
 }
 
 void tic_core_load(tic_cartridge* cart, const u8* buffer, s32 size)
-//void tic_core_load(tic_cartridge* cart, const u16* buffer, s32 size)
 {
     const u8* end = buffer + size;
     memset(cart, 0, sizeof(tic_cartridge));

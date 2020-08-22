@@ -979,7 +979,8 @@ ClipboardEvent getClipboardEvent()
 static void showPopupMessage(const char* text)
 {
     impl.popup.counter = POPUP_DUR;
-    strcpy(impl.popup.message, text);
+	memset(impl.popup.message,'\0', sizeof impl.popup.message);
+    strncpy(impl.popup.message, text, sizeof(impl.popup.message)-1);
 }
 
 static void exitConfirm(bool yes, void* data)

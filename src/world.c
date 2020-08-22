@@ -116,7 +116,8 @@ void initWorld(World* world, tic_mem* tic, Map* map)
 
     for(s32 i = 0; i < TIC80_WIDTH * TIC80_HEIGHT; i++)
     {
-        u8 index = getBankMap()->data[i];
+        //u8 index = getBankMap()->data[i];
+        u16 index = CLAMP(getBankMap()->data[i],0,TIC_BANK_SPRITES*2);
 
         if(index)
         {
