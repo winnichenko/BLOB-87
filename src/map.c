@@ -486,7 +486,8 @@ static void setMapSprite(Map* map, s32 x, s32 y) //put sprite on map
 
     for(s32 j = 0; j < map->sheet.rect.h; j++)
         for(s32 i = 0; i < map->sheet.rect.w; i++)
-            tic_api_mset(map->tic, map->src, (x+i)%TIC_MAP_WIDTH, (y+j)%TIC_MAP_HEIGHT, ((mx+i) + (my+j) * SHEET_COLS)+TIC_PAGE_SPRITES*map->page);
+            //tic_api_mset(map->tic, map->src, (x+i)%TIC_MAP_WIDTH, (y+j)%TIC_MAP_HEIGHT, ((mx+i) + (my+j) * SHEET_COLS)+TIC_PAGE_SPRITES*map->page);
+            tic_api_mset(map->tic, map->src, x+i%TIC_MAP_WIDTH, y+j%TIC_MAP_HEIGHT, ((mx+i) + (my+j) * SHEET_COLS)+TIC_PAGE_SPRITES*map->page);
 
     history_add(map->history);
 }
