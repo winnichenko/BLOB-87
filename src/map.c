@@ -24,10 +24,10 @@
 #include "history.h"
 
 #define SHEET_COLS (TIC_SPRITESHEET_SIZE / TIC_SPRITESIZE)
-#define BLOB89_MAPSHEETX (TIC80_WIDTH - TIC_SPRITESHEET_SIZE - 1)
-#define BLOB89_MAPSHEETY (19)
+#define BLOB87_MAPSHEETX (TIC80_WIDTH - TIC_SPRITESHEET_SIZE - 1)
+#define BLOB87_MAPSHEETY (19)
 
-tic_rect MapSheetRect = { BLOB89_MAPSHEETX, BLOB89_MAPSHEETY, TIC_SPRITESHEET_SIZE, TIC_SPRITESHEET_SIZE };
+tic_rect MapSheetRect = { BLOB87_MAPSHEETX, BLOB87_MAPSHEETY, TIC_SPRITESHEET_SIZE, TIC_SPRITESHEET_SIZE };
 
 #define MAP_WIDTH (TIC80_WIDTH)
 #define MAP_HEIGHT (TIC80_HEIGHT - TOOLBAR_SIZE)
@@ -1133,7 +1133,7 @@ static void tick(Map* map)
 
     drawMapReg(map); //draw map field
     //drawSheetReg(map, TIC80_WIDTH - TIC_SPRITESHEET_SIZE - 1, TOOLBAR_SIZE+8); // draw spritesheet
-    drawSheetReg(map, BLOB89_MAPSHEETX,BLOB89_MAPSHEETY); // draw spritesheet
+    drawSheetReg(map, BLOB87_MAPSHEETX,BLOB87_MAPSHEETY); // draw spritesheet
 }
 
 static void onStudioEvent(Map* map, StudioEvent event)
@@ -1170,7 +1170,7 @@ static void overline(tic_mem* tic, void* data)
     tic_api_clip(tic, 0, 0, TIC80_WIDTH, TIC80_HEIGHT);
 
 
-    drawSheetOvr(map, BLOB89_MAPSHEETX, BLOB89_MAPSHEETY); // draw white border of tileset
+    drawSheetOvr(map, BLOB87_MAPSHEETX, BLOB87_MAPSHEETY); // draw white border of tileset
 
     {
         tic_rect rect = {MAP_X, MAP_Y, MAP_WIDTH, MAP_HEIGHT};

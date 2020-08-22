@@ -2515,7 +2515,7 @@ static void onConsoleRamCommand(Console* console, const char* param)
     printLine(console);
 
     printTable(console, "\n+-----------------------------------+" \
-                        "\n|           80K RAM LAYOUT          |" \
+                        "\n|         1408K RAM LAYOUT          |" \
                         "\n+-------+-------------------+-------+" \
                         "\n| ADDR  | INFO              | SIZE  |" \
                         "\n+-------+-------------------+-------+");
@@ -2539,7 +2539,7 @@ static void onConsoleRamCommand(Console* console, const char* param)
         {offsetof(tic_ram, persistent),                 "PERSISTENT MEMORY"},
         {offsetof(tic_ram, flags),                      "SPRITE FLAGS"},
         {offsetof(tic_ram, font),                       "FONT"},
-        {offsetof(tic_ram, free),                       "..."},
+        {offsetof(tic_ram, free),                       "...CODE..."},
         {TIC_RAM_SIZE,                                  ""},
     };
 
@@ -2557,7 +2557,7 @@ static void onConsoleVRamCommand(Console* console, const char* param)
     printLine(console);
 
     printTable(console, "\n+-----------------------------------+" \
-                        "\n|           16K VRAM LAYOUT         |" \
+                        "\n|           64K VRAM LAYOUT         |" \
                         "\n+-------+-------------------+-------+" \
                         "\n| ADDR  | INFO              | SIZE  |" \
                         "\n+-------+-------------------+-------+");
@@ -2596,8 +2596,8 @@ static const struct
 #if defined(CAN_OPEN_URL)
     {"wiki",    NULL, "open github wiki page",      onConsoleWikiCommand},
 #endif
-    {"ram",     NULL, "show 80K RAM layout",        onConsoleRamCommand},
-    {"vram",    NULL, "show 16K VRAM layout",       onConsoleVRamCommand},
+    {"ram",     NULL, "show 1408K RAM layout",        onConsoleRamCommand},
+    {"vram",    NULL, "show 64K VRAM layout",       onConsoleVRamCommand},
     {"exit",    "quit", "exit the application",     onConsoleExitCommand},
     {"new",     NULL, "create new cart",            onConsoleNewCommand},
     {"load",    NULL, "load cart",                  onConsoleLoadCommand},
