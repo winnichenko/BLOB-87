@@ -63,8 +63,8 @@ typedef struct
 {
     ChunkType type:5;
     u32 bank:TIC_BANK_BITS;
-    u32 size:16; // max chunk size is 64K
-    u32 temp:8;
+    u32 size:20; // max chunk size is 64K
+    u32 temp:4;
 } Chunk;
 
 STATIC_ASSERT(tic_bank_bits, TIC_BANK_BITS == 3);
@@ -1906,8 +1906,10 @@ bool tic_api_keyp(tic_mem* tic, tic_key key, s32 hold, s32 period)
 }
 
 void tic_core_load(tic_cartridge* cart, const u8* buffer, s32 size)
+//void tic_core_load(tic_cartridge* cart, const u16* buffer, s32 size)
 {
     const u8* end = buffer + size;
+    //const u16* end = buffer + size;
     memset(cart, 0, sizeof(tic_cartridge));
 
     #define LOAD_CHUNK(to) memcpy(&to, buffer, MIN(sizeof(to), chunk.size))
@@ -1922,7 +1924,7 @@ void tic_core_load(tic_cartridge* cart, const u8* buffer, s32 size)
     {
         Chunk chunk;
         memcpy(&chunk, buffer, sizeof(Chunk));
-        buffer += sizeof(Chunk);
+		buffer += sizeof(Chunk);
 
         switch(chunk.type)
         {
