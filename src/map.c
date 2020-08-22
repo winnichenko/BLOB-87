@@ -436,7 +436,7 @@ static void drawCursorPos(Map* map, s32 x, s32 y)
     tic_api_print(map->tic, pos, px, py, tic_color_13, true, 1, false);
 }
 
-static void setMapSprite(Map* map, s32 x, s32 y)
+static void setMapSprite(Map* map, s32 x, s32 y) //put sprite on map
 {
     s32 mx = map->sheet.rect.x;
     s32 my = map->sheet.rect.y;
@@ -464,7 +464,7 @@ static tic_point getCursorPos(Map* map)
     return (tic_point){mx, my};
 }
 
-static void drawTileCursor(Map* map)
+static void drawTileCursor(Map* map) //draw tile under the cursor
 {
     if(map->scroll.active)
         return;
@@ -475,13 +475,13 @@ static void drawTileCursor(Map* map)
         s32 sx = map->sheet.rect.x;
         s32 sy = map->sheet.rect.y;
 
-        for(s32 j = 0, ty=pos.y; j < map->sheet.rect.h; j++, ty+=TIC_SPRITESIZE)
-            for(s32 i = 0, tx=pos.x; i < map->sheet.rect.w; i++, tx+=TIC_SPRITESIZE)
+		for (s32 j = 0, ty = pos.y; j < map->sheet.rect.h; j++, ty += TIC_SPRITESIZE)
+			for (s32 i = 0, tx = pos.x; i < map->sheet.rect.w; i++, tx += TIC_SPRITESIZE)
                 tic_api_spr(map->tic, getBankTiles(), (sx+i) + (sy+j) * SHEET_COLS, tx, ty, 1, 1, NULL, 0, 1, tic_no_flip, tic_no_rotate);
     }
 }
 
-static void drawTileCursorOvr(Map* map)
+static void drawTileCursorOvr(Map* map) //draw tile white outline
 {
     if(map->scroll.active)
         return;
