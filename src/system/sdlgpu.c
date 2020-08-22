@@ -329,7 +329,7 @@ static void initTouchGamepad()
             const u32 Delta = ((TIC80_FULLWIDTH*sizeof(u32))/sizeof *out - TIC80_WIDTH);
 
             s32 col = 0;
-
+			/*
             while(in != end)
             {
                 u8 low = *in & 0x0f;
@@ -346,7 +346,7 @@ static void initTouchGamepad()
                     out += Delta;
                 }
             }
-
+			*/
             updateGamepadParts();
         }
     }
@@ -1140,15 +1140,14 @@ static void blitCursor(const u8* in)
         const u32* pal = tic_tool_palette_blit(&platform.studio->tic->ram.vram.palette);
         static u32 data[TIC_SPRITESIZE*TIC_SPRITESIZE];
         u32* out = data;
-
+		
         while(in != end)
         {
             u8 low = *in & 0x0f;
             u8 hi = (*in & 0xf0) >> TIC_PALETTE_BPP;
             *out++ = low ? *(pal + low) : 0;
             *out++ = hi ? *(pal + hi) : 0;
-
-            in++;
+			in++;
         }
 
         GPU_UpdateImageBytes(platform.mouse.texture, NULL, (const u8*)data, TIC_SPRITESIZE * sizeof(u32));

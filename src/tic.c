@@ -167,12 +167,37 @@ static void resetPalette(tic_mem* memory)
 
 static inline u8 mapColor(tic_mem* tic, u8 color)
 {
-    return tic_tool_peek4(tic->ram.vram.mapping, color & 0xf);
+    //return tic_tool_peek4(tic->ram.vram.mapping, color & 0xf);
+    return tic_tool_peek(tic->ram.vram.mapping, color);
+    //return tic_tool_peek(tic->ram.vram.mapping, color);
 }
 
 static void setPixelDma(tic_mem* tic, s32 x, s32 y, u8 color)
 {
-    tic_tool_poke4(tic->ram.vram.screen.data, y * TIC80_WIDTH + x, color);
+    //tic_tool_poke4(tic->ram.vram.screen.data, y * TIC80_WIDTH + x, color);
+    tic_tool_poke(tic->ram.vram.screen.data, y * TIC80_WIDTH + x, color);
+	//tic->ram.vram.screen.data + y * TIC80_WIDTH + x = color;
+	//memcpy(tic->ram.vram.screen.data + y * TIC80_WIDTH + x, &color, 1);
+	//*(tic->ram.vram.screen.data + y/2 * TIC80_WIDTH + x/2) = color;
+	//tic_api_poke(tic->ram.vram.screen.data, y * TIC80_WIDTH + x, color);
+	
+	/*
+	inline void tic_tool_poke4(void* addr, u32 index, u8 value)
+{
+    u8* val = (u8*)addr + (index >> 1);
+
+    if(index & 1)
+    {
+        *val &= 0x0f;
+        *val |= (value << 4);
+    }
+    else
+    {
+        *val &= 0xf0;
+        *val |= value & 0x0f;
+    }
+}
+	*/
 }
 
 static inline u32* getOvrAddr(tic_mem* tic, s32 x, s32 y)
@@ -208,14 +233,16 @@ static u8 getPixelDma(tic_mem* tic, s32 x, s32 y)
 {
     tic_machine* machine = (tic_machine*)tic;
 
-    return tic_tool_peek4(machine->memory.ram.vram.screen.data, y * TIC80_WIDTH + x);
+    return tic_tool_peek(machine->memory.ram.vram.screen.data, y * TIC80_WIDTH + x);
+    //return tic_tool_peek(machine->memory.ram.vram.screen.data, y * TIC80_WIDTH + x);
 }
 
 static void setPixel(tic_machine* machine, s32 x, s32 y, u8 color)
 {
     if(x < machine->state.clip.l || y < machine->state.clip.t || x >= machine->state.clip.r || y >= machine->state.clip.b) return;
 
-    machine->state.setpix(&machine->memory, x, y, mapColor(&machine->memory, color));
+    //machine->state.setpix(&machine->memory, x, y, mapColor(&machine->memory, color));
+    machine->state.setpix(&machine->memory, x, y, color);
 }
 
 static u8 getPixel(tic_machine* machine, s32 x, s32 y)
@@ -225,6 +252,7 @@ static u8 getPixel(tic_machine* machine, s32 x, s32 y)
     return machine->state.getpix(&machine->memory, x, y);
 }
 
+/*
 static void drawHLineDma(tic_mem* memory, s32 xl, s32 xr, s32 y, u8 color)
 {
     color = color << 4 | color;
@@ -240,6 +268,25 @@ static void drawHLineDma(tic_mem* memory, s32 xl, s32 xr, s32 y, u8 color)
         tic_tool_poke4(&memory->ram.vram.screen.data, y * TIC80_WIDTH + xr - 1, color);
     }
 }
+*/
+
+static void drawHLineDma(tic_mem* memory, s32 xl, s32 xr, s32 y, u8 color)
+{
+    if (xl >= xr) return;
+    /*if (xl & 1) {
+        tic_tool_poke(&memory->ram.vram.screen.data, y * TIC80_WIDTH + xl, color);
+        xl++;
+    }
+	*/
+    //s32 count = (xr - xl) >> 1;
+    s32 count = (xr - xl);
+    u8 *screen = memory->ram.vram.screen.data + ((y * TIC80_WIDTH + xl));
+    for(s32 i = 0; i < count; i++) *screen++ = color;
+        tic_tool_poke(&memory->ram.vram.screen.data, y * TIC80_WIDTH + xr - 1, color);
+}
+
+
+
 
 static void drawHLineOvr(tic_mem* tic, s32 x1, s32 x2, s32 y, u8 color)
 {
@@ -257,7 +304,8 @@ static void drawHLine(tic_machine* machine, s32 x, s32 y, s32 width, u8 color)
     u8 final_color = mapColor(&machine->memory, color);
     s32 xl = MAX(x, machine->state.clip.l);
     s32 xr = MIN(x + width, machine->state.clip.r);
-    machine->state.drawhline(&machine->memory, xl, xr, y, final_color);
+    //machine->state.drawhline(&machine->memory, xl, xr, y, final_color);
+    machine->state.drawhline(&machine->memory, xl, xr, y, color);
 }
 
 static void drawVLine(tic_machine* machine, s32 x, s32 y, s32 height, u8 color)
@@ -292,7 +340,8 @@ static void drawRectBorder(tic_machine* machine, s32 x, s32 y, s32 width, s32 he
         s32 xx = x; \
         for(s32 px=sx; px < ex; px++, xx++) \
         { \
-            u8 color = mapping[tic_tool_peek4(buffer, INDEX_EXPR)]; \
+            /*u8 color = mapping[tic_tool_peek(buffer, INDEX_EXPR)]; */\
+            u8 color = tic_tool_peek(buffer, INDEX_EXPR);\
             if(color != 255) machine->state.setpix(&machine->memory, xx, y, color); \
         } \
     } \
@@ -304,9 +353,10 @@ static void drawRectBorder(tic_machine* machine, s32 x, s32 y, s32 width, s32 he
 static void drawTile(tic_machine* machine, const tic_tile* buffer, s32 x, s32 y, u8* colors, s32 count, s32 scale, tic_flip flip, tic_rotate rotate)
 {
     static u8 mapping[TIC_PALETTE_SIZE];
-    for (s32 i = 0; i < TIC_PALETTE_SIZE; i++)
+    /*
+	for (s32 i = 0; i < TIC_PALETTE_SIZE; i++)
     {
-        u8 mapped = tic_tool_peek4(machine->memory.ram.vram.mapping, i);
+        u8 mapped = tic_tool_peek(machine->memory.ram.vram.mapping, i);
         for (s32 j = 0; j < count; j++)
         {
             if (mapped == colors[j]) {
@@ -316,7 +366,7 @@ static void drawTile(tic_machine* machine, const tic_tile* buffer, s32 x, s32 y,
         }
         mapping[i] = mapped;
     }
-
+	*/
     rotate &= 0b11;
     u32 orientation = flip & 0b11;
 
@@ -361,7 +411,7 @@ static void drawTile(tic_machine* machine, const tic_tile* buffer, s32 x, s32 y,
             } else {
                 i = iy * TIC_SPRITESIZE + ix;
             }
-            u8 color = tic_tool_peek4(buffer, i);
+            u8 color = tic_tool_peek(buffer, i);
             if(mapping[color] != 255) drawRect(machine, xx, y, scale, scale, color);
         }
     }
@@ -668,8 +718,11 @@ void tic_api_cls(tic_mem* memory, u8 color)
 
     if(memcmp(&machine->state.clip, &EmptyClip, sizeof(tic_clip_data)) == 0)
     {
-        color &= 0b00001111;
-        memset(memory->ram.vram.screen.data, color | (color << TIC_PALETTE_BPP), sizeof(memory->ram.vram.screen.data));     
+        //color &= 0b00001111;
+        //memset(memory->ram.vram.screen.data, color | (color << TIC_PALETTE_BPP), sizeof(memory->ram.vram.screen.data));     
+        memset(memory->ram.vram.screen.data, color, sizeof(memory->ram.vram.screen.data));  
+		//tic_api_rect(memory, machine->state.clip.l, machine->state.clip.t, machine->state.clip.r - machine->state.clip.l, machine->state.clip.b - machine->state.clip.t, color);
+
     }
     else
     {
@@ -843,7 +896,8 @@ s32 drawFixedSpriteFont(tic_mem* memory, u8 index, s32 x, s32 y, s32 width, s32 
     for(s32 col = 0; col < Size; col++)
     {
         for(i = 0; i < Size*Size; i += Size)
-            if(tic_tool_peek4(ptr, col + i) != chromakey) break;
+            if(tic_tool_peek(ptr, col + i) != chromakey) break;
+            //if(tic_tool_peek4(ptr, col + i) != chromakey) break;
 
         if(i < Size*Size) break; else start++;
     }
@@ -853,7 +907,8 @@ s32 drawFixedSpriteFont(tic_mem* memory, u8 index, s32 x, s32 y, s32 width, s32 
     for(s32 col = Size - 1; col >= start; col--)
     {
         for(i = 0; i < Size*Size; i += Size)
-            if(tic_tool_peek4(ptr, col + i) != chromakey) break;
+            if(tic_tool_peek(ptr, col + i) != chromakey) break;
+            //if(tic_tool_peek4(ptr, col + i) != chromakey) break;
 
         if(i < Size*Size) break; else end--;
     }
@@ -862,7 +917,8 @@ s32 drawFixedSpriteFont(tic_mem* memory, u8 index, s32 x, s32 y, s32 width, s32 
     {
         for(s32 col = start, xs = x + start*scale; col < end; col++, xs += scale)
         {
-            u8 color = tic_tool_peek4(ptr, col + row * Size);
+            //u8 color = tic_tool_peek4(ptr, col + row * Size);
+            u8 color = tic_tool_peek(ptr, col + row * Size);
 
             if(color != chromakey)
                 tic_api_rect(memory, xs, ys, scale, scale, color);
@@ -1635,6 +1691,7 @@ static void initCover(tic_mem* tic)
                     const gif_color* c = &image->palette[image->buffer[i]];
                     u8 color = tic_tool_find_closest_color(tic->cart.bank0.palette.colors, c);
                     tic_tool_poke4(tic->ram.vram.screen.data, i, color);
+                    //tic_tool_poke4(tic->ram.vram.screen.data, i, color);
                 }
             }
 
@@ -2035,7 +2092,71 @@ void tic_core_load(tic_cartridge* cart, const u8* buffer, s32 size)
     // load DB16 palette if it not exists
     if(!paletteExists)
     {
-        static const u8 DB16[] = {0x14, 0x0c, 0x1c, 0x44, 0x24, 0x34, 0x30, 0x34, 0x6d, 0x4e, 0x4a, 0x4e, 0x85, 0x4c, 0x30, 0x34, 0x65, 0x24, 0xd0, 0x46, 0x48, 0x75, 0x71, 0x61, 0x59, 0x7d, 0xce, 0xd2, 0x7d, 0x2c, 0x85, 0x95, 0xa1, 0x6d, 0xaa, 0x2c, 0xd2, 0xaa, 0x99, 0x6d, 0xc2, 0xca, 0xda, 0xd4, 0x5e, 0xde, 0xee, 0xd6};
+        static const u8 DB16[] = {	0x14, 0x0c, 0x1c, 
+									0x44, 0x24, 0x34, 
+									0x30, 0x34, 0x6d, 
+									0x4e, 0x4a, 0x4e, 
+									0x85, 0x4c, 0x30, 
+									0x34, 0x65, 0x24, 
+									0xd0, 0x46, 0x48, 
+									0x75, 0x71, 0x61, 
+									0x59, 0x7d, 0xce, 
+									0xd2, 0x7d, 0x2c, 
+									0x85, 0x95, 0xa1, 
+									0x6d, 0xaa, 0x2c, 
+									0xd2, 0xaa, 0x99, 
+									0x6d, 0xc2, 0xca, 
+									0xda, 0xd4, 0x5e, 
+									0xde, 0xee, 0xd6, //16colors
+									0x00, 0x00, 0x00,
+									0x01, 0x01, 0x01,
+									0x02, 0x02, 0x02,
+									0x03, 0x03, 0x03,
+									0x04, 0x04, 0x04,
+									0x05, 0x05, 0x05,
+									0x06, 0x06, 0x06,
+									0x07, 0x07, 0x07,
+									0x08, 0x08, 0x08,
+									0x09, 0x09, 0x09,
+									0x0a, 0x0a, 0x0a,
+									0x0b, 0x0b, 0x0b,
+									0x0c, 0x0c, 0x0c,
+									0x0d, 0x0d, 0x0d,
+									0x0e, 0x0e, 0x0e,
+									0x0f, 0x0f, 0x0f, //32 colors
+									0x00, 0x00, 0x00,
+									0x01, 0x00, 0x01,
+									0x02, 0x00, 0x02,
+									0x03, 0x00, 0x03,
+									0x04, 0x00, 0x04,
+									0x05, 0x00, 0x05,
+									0x06, 0x00, 0x06,
+									0x07, 0x00, 0x07,
+									0x08, 0x00, 0x08,
+									0x09, 0x00, 0x09,
+									0x0a, 0x00, 0x0a,
+									0x0b, 0x00, 0x0b,
+									0x0c, 0x00, 0x0c,
+									0x0d, 0x00, 0x0d,
+									0x0e, 0x00, 0x0e,
+									0x0f, 0x00, 0x0f, //48 colors
+									0x00, 0x00, 0x00,
+									0x00, 0x01, 0x01,
+									0x00, 0x02, 0x02,
+									0x00, 0x03, 0x03,
+									0x00, 0x04, 0x04,
+									0x00, 0x05, 0x05,
+									0x00, 0x06, 0x06,
+									0x00, 0x07, 0x07,
+									0x00, 0x08, 0x08,
+									0x00, 0x09, 0x09,
+									0x00, 0x0a, 0x0a,
+									0x00, 0x0b, 0x0b,
+									0x00, 0x0c, 0x0c,
+									0x00, 0x0d, 0x0d,
+									0x00, 0x0e, 0x0e,
+									0x00, 0x0f, 0x0f //64 colors
+		};
         memcpy(cart->bank0.palette.data, DB16, sizeof(tic_palette));
     }
 }
@@ -2134,7 +2255,7 @@ static inline void memset4(void *dst, u32 val, u32 dwords)
     }
 #endif
 }
-
+/*
 void tic_core_blit_ex(tic_mem* tic, tic_scanline scanline, tic_overline overline, void* data)
 {
     const u32* pal = tic_tool_palette_blit(&tic->ram.vram.palette);
@@ -2186,6 +2307,60 @@ void tic_core_blit_ex(tic_mem* tic, tic_scanline scanline, tic_overline overline
 
     if(overline)
         overline(tic, data);
+
+}
+*/
+void tic_core_blit_ex(tic_mem* tic, tic_scanline scanline, tic_overline overline, void* data)
+{
+	const u32* pal = tic_tool_palette_blit(&tic->ram.vram.palette);
+
+	{
+		tic_machine* machine = (tic_machine*)tic;
+		memcpy(machine->state.ovr.palette, pal, sizeof machine->state.ovr.palette);
+	}
+
+	if (scanline)
+	{
+		scanline(tic, 0, data);
+		pal = tic_tool_palette_blit(&tic->ram.vram.palette);
+	}
+
+	enum { Top = (TIC80_FULLHEIGHT - TIC80_HEIGHT), Bottom = Top };
+	enum { Left = (TIC80_FULLWIDTH - TIC80_WIDTH), Right = Left };
+
+	u32* out = tic->screen;
+
+	memset4(&out[0 * TIC80_FULLWIDTH], pal[tic->ram.vram.vars.border], TIC80_FULLWIDTH*Top);
+
+	u32* rowPtr = out + (Top*TIC80_FULLWIDTH);
+	for (s32 r = 0; r < TIC80_HEIGHT; r++, rowPtr += TIC80_FULLWIDTH)
+	{
+		u32 *colPtr = rowPtr + Left;
+		memset4(rowPtr, pal[tic->ram.vram.vars.border], Left);
+
+		s32 pos = (r + tic->ram.vram.vars.offset.y + TIC80_HEIGHT) % TIC80_HEIGHT * TIC80_WIDTH;
+
+		u32 x = (-tic->ram.vram.vars.offset.x + TIC80_WIDTH) % TIC80_WIDTH;
+		for (s32 c = 0; c < TIC80_WIDTH; c++)
+		{
+			u8 val = ((u8*)tic->ram.vram.screen.data)[pos + c];
+			*(colPtr + (x++ % TIC80_WIDTH)) = pal[val];
+			//*(colPtr + (x++ % TIC80_WIDTH)) = pal[val >> 4];
+		}
+
+		memset4(rowPtr + (TIC80_FULLWIDTH - Right), pal[tic->ram.vram.vars.border], Right);
+
+		if (scanline && (r < TIC80_HEIGHT - 1))
+		{
+			scanline(tic, r + 1, data);
+			pal = tic_tool_palette_blit(&tic->ram.vram.palette);
+		}
+	}
+
+	memset4(&out[(TIC80_FULLHEIGHT - Bottom) * TIC80_FULLWIDTH], pal[tic->ram.vram.vars.border], TIC80_FULLWIDTH*Bottom);
+
+	if (overline)
+		overline(tic, data);
 
 }
 

@@ -25,7 +25,7 @@
 
 #define CANVAS_SIZE (64)
 #define PALETTE_CELL_SIZE 8
-#define PALETTE_ROWS 2
+#define PALETTE_ROWS 8
 #define PALETTE_COLS (TIC_PALETTE_SIZE / PALETTE_ROWS)
 #define PALETTE_WIDTH (PALETTE_COLS * PALETTE_CELL_SIZE)
 #define PALETTE_HEIGHT (PALETTE_ROWS * PALETTE_CELL_SIZE)
@@ -55,14 +55,12 @@ static void clearCanvasSelection(Sprite* sprite)
 
 static u8 getSheetPixel(Sprite* sprite, s32 x, s32 y)
 {
-    //return getSpritePixel(sprite->src->data, x, sprite->index >= TIC_BANK_SPRITES ? y + TIC_SPRITESHEET_SIZE: y);
     //return getSpritePixel(sprite->src->data, x, sprite->index >= TIC_PAGE_SPRITES ? y + TIC_SPRITESHEET_SIZE: y);
     return getSpritePixel(sprite->src->data, x, y + TIC_SPRITESHEET_SIZE*(sprite->index / TIC_PAGE_SPRITES));
 }
 
 static void setSheetPixel(Sprite* sprite, s32 x, s32 y, u8 color)
 {
-    //setSpritePixel(sprite->src->data, x, sprite->index >= TIC_BANK_SPRITES ? y + TIC_SPRITESHEET_SIZE: y, color);
     //setSpritePixel(sprite->src->data, x, sprite->index >= TIC_PAGE_SPRITES ? y + TIC_SPRITESHEET_SIZE: y, color);
     setSpritePixel(sprite->src->data, x,  y + TIC_SPRITESHEET_SIZE*(sprite->index / TIC_PAGE_SPRITES), color);
 }

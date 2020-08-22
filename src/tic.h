@@ -30,8 +30,8 @@
 #define TIC_FONT_WIDTH 6
 #define TIC_FONT_HEIGHT 6
 #define TIC_ALTFONT_WIDTH 4
-#define TIC_PALETTE_BPP 4 //4
-#define TIC_PALETTE_SIZE (1 << TIC_PALETTE_BPP)
+#define TIC_PALETTE_BPP 8 //4
+#define TIC_PALETTE_SIZE 64//(1 << TIC_PALETTE_BPP)
 #define TIC_SPRITESIZE 8
 
 #define BITS_IN_BYTE 8
@@ -123,6 +123,54 @@ typedef enum
     tic_color_13,
     tic_color_14,
     tic_color_15,
+	tic_color_16,
+	tic_color_17,
+	tic_color_18,
+	tic_color_19,
+	tic_color_20,
+	tic_color_21,
+	tic_color_22,
+	tic_color_23,
+	tic_color_24,
+	tic_color_25,
+	tic_color_26,
+	tic_color_27,
+	tic_color_28,
+	tic_color_29,
+	tic_color_30,
+	tic_color_31,
+	tic_color_32,
+	tic_color_33,
+	tic_color_34,
+	tic_color_35,
+	tic_color_36,
+	tic_color_37,
+	tic_color_38,
+	tic_color_39,
+	tic_color_40,
+	tic_color_41,
+	tic_color_42,
+	tic_color_43,
+	tic_color_44,
+	tic_color_45,
+	tic_color_46,
+	tic_color_47,
+	tic_color_48,
+	tic_color_49,
+	tic_color_50,
+	tic_color_51,
+	tic_color_52,
+	tic_color_53,
+	tic_color_54,
+	tic_color_55,
+	tic_color_56,
+	tic_color_57,
+	tic_color_58,
+	tic_color_59,
+	tic_color_60,
+	tic_color_61,
+	tic_color_62,
+	tic_color_63,
 } tic_color;
 
 typedef enum
@@ -424,7 +472,8 @@ typedef struct
 
 typedef struct
 {
-    u8 data[TIC80_WIDTH * TIC80_HEIGHT * TIC_PALETTE_BPP / BITS_IN_BYTE];
+    //u8 data[TIC80_WIDTH * TIC80_HEIGHT * TIC_PALETTE_BPP / BITS_IN_BYTE];
+    u8 data[TIC80_WIDTH * TIC80_HEIGHT];
 } tic_screen;
 
 typedef union

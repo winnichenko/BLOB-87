@@ -463,13 +463,13 @@ static u8* getSpritePtr(tic_tile* tiles, s32 x, s32 y)
 void setSpritePixel(tic_tile* tiles, s32 x, s32 y, u8 color)
 {
     // TODO: check spritesheet rect
-    tic_tool_poke4(getSpritePtr(tiles, x, y), (x % TIC_SPRITESIZE) + (y % TIC_SPRITESIZE) * TIC_SPRITESIZE, color);
+    tic_tool_poke(getSpritePtr(tiles, x, y), (x % TIC_SPRITESIZE) + (y % TIC_SPRITESIZE) * TIC_SPRITESIZE, color);
 }
 
 u8 getSpritePixel(tic_tile* tiles, s32 x, s32 y)
 {
     // TODO: check spritesheet rect
-    return tic_tool_peek4(getSpritePtr(tiles, x, y), (x % TIC_SPRITESIZE) + (y % TIC_SPRITESIZE) * TIC_SPRITESIZE);
+    return tic_tool_peek(getSpritePtr(tiles, x, y), (x % TIC_SPRITESIZE) + (y % TIC_SPRITESIZE) * TIC_SPRITESIZE);
 }
 
 void toClipboard(const void* data, s32 size, bool flip)
@@ -1772,11 +1772,16 @@ static void updateSystemFont()
 {
     memset(impl.systemFont.data, 0, sizeof(tic_font));
 
-    for(s32 i = 0; i < TIC_FONT_CHARS; i++)
+   /* for(s32 i = 0; i < TIC_FONT_CHARS; i++)
         for(s32 y = 0; y < TIC_SPRITESIZE; y++)
             for(s32 x = 0; x < TIC_SPRITESIZE; x++)
                 if(tic_tool_peek4(&impl.config->cart.bank0.sprites.data[i], TIC_SPRITESIZE*(y+1) - x-1))
-                    impl.systemFont.data[i*BITS_IN_BYTE+y] |= 1 << x;
+                    impl.systemFont.data[i*BITS_IN_BYTE+y] |= 1 << x;*/
+	for (s32 i = 0; i < TIC_FONT_CHARS; i++)
+		for (s32 y = 0; y < TIC_SPRITESIZE; y++)
+			for (s32 x = 0; x < TIC_SPRITESIZE; x++)
+				if (tic_tool_peek(&impl.config->cart.bank0.sprites.data[i], TIC_SPRITESIZE*(y + 1) - x - 1))
+					impl.systemFont.data[i*BITS_IN_BYTE + y] |= 1 << x;
 }
 
 void studioConfigChanged()

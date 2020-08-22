@@ -1631,7 +1631,7 @@ static void onImportSprites(const char* name, const void* buffer, size_t size, v
                 enum
                 {
                     Width = TIC_SPRITESHEET_SIZE,
-                    Height = TIC_SPRITESHEET_SIZE*2,
+                    Height = TIC_SPRITESHEET_SIZE*8,
                 };
 
                 s32 w = MIN(Width, image->width);

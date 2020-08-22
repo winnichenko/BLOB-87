@@ -46,11 +46,25 @@ inline void tic_tool_poke4(void* addr, u32 index, u8 value)
     }
 }
 
+inline void tic_tool_poke(void* addr, u32 index, u8 value)
+{
+    u8* val = (u8*)addr+index;
+    *val = (value);
+}
+
 inline u8 tic_tool_peek4(const void* addr, u32 index)
 {
     u8 val = ((u8*)addr)[index >> 1];
 
     return index & 1 ? val >> 4 : val & 0xf;
+}
+
+inline u8 tic_tool_peek(const void* addr, u32 index)
+{
+    u8 val = ((u8*)addr)[index];
+    //u8 val = ((u8*)(addr+index));
+
+    return val;
 }
 
 bool    tic_tool_parse_note(const char* noteStr, s32* note, s32* octave);
