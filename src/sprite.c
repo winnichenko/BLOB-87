@@ -36,7 +36,7 @@ enum
     ToolbarH = TOOLBAR_SIZE,
     CanvasX = 24, CanvasY = 20, CanvasW = CANVAS_SIZE, CanvasH = CANVAS_SIZE,
     PaletteX = 24, PaletteY = 112, PaletteW = PALETTE_WIDTH, PaletteH = PALETTE_HEIGHT,
-    SheetX = TIC80_WIDTH - TIC_SPRITESHEET_SIZE - 1, SheetY = ToolbarH, SheetW = TIC_SPRITESHEET_SIZE, SheetH = TIC_SPRITESHEET_SIZE,
+    SheetX = TIC80_WIDTH - TIC_SPRITESHEET_SIZE - 1, SheetY = CanvasY-1, SheetW = TIC_SPRITESHEET_SIZE, SheetH = TIC_SPRITESHEET_SIZE,
 };
 
 // !TODO: move it to helpers place
@@ -65,17 +65,21 @@ static void setSheetPixel(Sprite* sprite, s32 x, s32 y, u8 color)
 
 static s32 getIndexPosX(Sprite* sprite)
 {
-    s32 index = sprite->index % TIC_BANK_SPRITES;
+    //s32 index = sprite->index % TIC_BANK_SPRITES;
+    s32 index = sprite->index % TIC_PAGE_SPRITES;
+    //s32 index = sprite->index % TIC_BANK_SPRITES*TIC_SPRITE_BANKS - sprite->index % TIC_PAGE_SPRITES;
     return index % SHEET_COLS * TIC_SPRITESIZE;
 }
 
 static s32 getIndexPosY(Sprite* sprite)
 {
-    s32 index = sprite->index % TIC_BANK_SPRITES;
+    //s32 index = sprite->index % TIC_BANK_SPRITES;
+    s32 index = sprite->index % TIC_PAGE_SPRITES;
+    //s32 index = sprite->index % TIC_BANK_SPRITES*TIC_SPRITE_BANKS - sprite->index % TIC_PAGE_SPRITES;
     return index / SHEET_COLS * TIC_SPRITESIZE;
 }
 
-static void drawSelection(Sprite* sprite, s32 x, s32 y, s32 w, s32 h)
+static void drawSelection(Sprite* sprite, s32 x, s32 y, s32 w, s32 h) // draw selection inside sprite canvas
 {
     tic_mem* tic = sprite->tic;
 
@@ -1137,7 +1141,8 @@ static void selectSprite(Sprite* sprite, s32 x, s32 y)
     x /= TIC_SPRITESIZE;
     y /= TIC_SPRITESIZE;
 
-    sprite->index -= sprite->index % TIC_BANK_SPRITES;
+    //sprite->index -= sprite->index % TIC_BANK_SPRITES;
+    sprite->index -= sprite->index % TIC_PAGE_SPRITES;
     sprite->index += x + y * SHEET_COLS;
 
     clearCanvasSelection(sprite);
@@ -1157,7 +1162,7 @@ static void drawSheetOvr(Sprite* sprite, s32 x, s32 y)
     tic_mem* tic = sprite->tic;
 
     tic_rect rect = {x, y, TIC_SPRITESHEET_SIZE, TIC_SPRITESHEET_SIZE};
-
+	//tic_api_rect(tic, TIC80_WIDTH - TIC_SPRITESHEET_SIZE, ToolbarH, TIC_SPRITESHEET_SIZE, TIC80_HEIGHT - ToolbarH,tic_color_14);
     tic_api_rectb(tic, rect.x - 1, rect.y - 1, rect.w + 2, rect.h + 2, tic_color_12);
 
     if(checkMousePos(&rect))
@@ -1183,7 +1188,7 @@ static void drawSheet(Sprite* sprite, s32 x, s32 y)
 
     tic_rect rect = {x, y, TIC_SPRITESHEET_SIZE, TIC_SPRITESHEET_SIZE};
 
-    for(s32 j = 0, index = (sprite->index - sprite->index % TIC_BANK_SPRITES); j < rect.h; j += TIC_SPRITESIZE)
+    for(s32 j = 0, index = (sprite->index - sprite->index % TIC_PAGE_SPRITES); j < rect.h; j += TIC_SPRITESIZE)
         for(s32 i = 0; i < rect.w; i += TIC_SPRITESIZE, index++)
             tic_api_spr(tic, sprite->src, index, x + i, y + j, 1, 1, NULL, 0, 1, tic_no_flip, tic_no_rotate);
 }
@@ -1537,9 +1542,17 @@ static void redo(Sprite* sprite)
 
 static void switchBanks(Sprite* sprite)
 {
-    bool bg = sprite->index < TIC_BANK_SPRITES;
-
-    sprite->index += bg ? TIC_BANK_SPRITES : -TIC_BANK_SPRITES;
+    //bool bg = sprite->index < TIC_BANK_SPRITES;
+	u16 idx = sprite->index;
+	if (idx < TIC_BANK_SPRITES*TIC_SPRITE_BANKS - TIC_PAGE_SPRITES)
+	{
+		//sprite->index += bg ? TIC_BANK_SPRITES : -TIC_BANK_SPRITES;
+		sprite->index += TIC_PAGE_SPRITES;
+	}
+	else
+	{
+		sprite->index = 0;
+	}
     
     clearCanvasSelection(sprite);
 }
@@ -1651,12 +1664,60 @@ static void drawSpriteToolbar(Sprite* sprite)
         tic_api_rect(tic, rect.x+1 + val*6, 2, 3, 3, tic_color_12);
     }
 
-    bool bg = sprite->index < TIC_BANK_SPRITES;
+	/*
+	for (s32 i = 0; i < TIC_EDITOR_BANKS; i++)
+	{
+		tic_rect rect = { x + 2 + (i + 1)*Size, 0, Size, Size };
+		bool over = false;
+		if (checkMousePos(&rect))
+		{
+			setCursor(tic_cursor_hand);
+			over = true;
+			if (checkMouseClick(&rect, tic_mouse_left))
+			{
+				if (impl.bank.chained)
+					memset(impl.bank.indexes, i, sizeof impl.bank.indexes);
+				else impl.bank.indexes[mode] = i;
+			}
+		}
+		if (i == impl.bank.indexes[mode])
+			tic_api_rect(tic, rect.x, rect.y, rect.w, rect.h, tic_color_2);
+		tic_api_print(tic, (char[]) { '0' + i, '\0' }, rect.x + 1, rect.y + 1, i == impl.bank.indexes[mode] ? tic_color_12 : over ? tic_color_2 : tic_color_13, false, 1, false);
+	}
+	*/
 
+	{
+		static const char Label[] = "12345678";
+		char pg = 0;
+		for (s32 i = 0; i < 8; i++)
+		{
+			tic_rect rect = { SheetX+i*8, SheetY - 8, TIC_FONT_WIDTH + 1, TIC_SPRITESIZE - 1 };
+			tic_api_rect(tic, rect.x, rect.y, rect.w, rect.h, tic_color_0);
+			//tic_api_print(tic, Label, rect.x + 1, rect.y + 1, tic_color_12, true, 1, false);
+
+			if (checkMousePos(&rect))
+			{
+				setCursor(tic_cursor_hand);
+
+				showTooltip("PAGES");
+
+				if (checkMouseClick(&rect, tic_mouse_left))
+				{
+					tic_api_rect(tic, (rect.x + 1)+i*8, rect.y + 1, rect.w - 1, rect.h - 1, tic_color_14);
+					//sprite->index -= TIC_BANK_SPRITES;
+					//clearCanvasSelection(sprite);
+				}
+			}
+		}
+	}
+
+	//bool bg = sprite->index < TIC_SPRITESHEET_SIZE % TIC_PAGE_SPRITES;//TIC_BANK_SPRITES;
+	u16 idx = sprite->index;
     {
-        static const char Label[] = "BG";
+		static const char Label[] = "<<";// "BG";
         tic_rect rect = {TIC80_WIDTH - 2 * TIC_FONT_WIDTH - 2, 0, 2 * TIC_FONT_WIDTH + 1, TIC_SPRITESIZE-1};
-        tic_api_rect(tic, rect.x, rect.y, rect.w, rect.h, bg ? tic_color_0 : tic_color_14);
+        //tic_api_rect(tic, rect.x, rect.y, rect.w, rect.h, bg ? tic_color_0 : tic_color_14);
+        tic_api_rect(tic, rect.x, rect.y, rect.w, rect.h, tic_color_14);
         tic_api_print(tic, Label, rect.x+1, rect.y+1, tic_color_12, true, 1, false);
 
         if(checkMousePos(&rect))
@@ -1665,18 +1726,19 @@ static void drawSpriteToolbar(Sprite* sprite)
 
             showTooltip("TILES [tab]");
 
-            if(!bg && checkMouseClick(&rect, tic_mouse_left))
+            if((idx > TIC_PAGE_SPRITES) && checkMouseClick(&rect, tic_mouse_left))
             {
-                sprite->index -= TIC_BANK_SPRITES;
+				sprite->index -= TIC_PAGE_SPRITES;//TIC_BANK_SPRITES;
                 clearCanvasSelection(sprite);
             }
         }
     }
 
     {
-        static const char Label[] = "FG";
+		static const char Label[] = ">>";//"FG";
         tic_rect rect = {TIC80_WIDTH - 4 * TIC_FONT_WIDTH - 4, 0, 2 * TIC_FONT_WIDTH + 1, TIC_SPRITESIZE-1};
-        tic_api_rect(tic, rect.x, rect.y, rect.w, rect.h, bg ? tic_color_14 : tic_color_0);
+        //tic_api_rect(tic, rect.x, rect.y, rect.w, rect.h, bg ? tic_color_14 : tic_color_0);
+        tic_api_rect(tic, rect.x, rect.y, rect.w, rect.h, tic_color_14);
         tic_api_print(tic, Label, rect.x+1, rect.y+1, tic_color_12, true, 1, false);
 
         if(checkMousePos(&rect))
@@ -1685,9 +1747,9 @@ static void drawSpriteToolbar(Sprite* sprite)
 
             showTooltip("SPRITES [tab]");
 
-            if(bg && checkMouseClick(&rect, tic_mouse_left))
+            if((idx < (TIC_BANK_SPRITES*TIC_SPRITE_BANKS-TIC_PAGE_SPRITES))&& checkMouseClick(&rect, tic_mouse_left))
             {
-                sprite->index += TIC_BANK_SPRITES;
+				sprite->index += TIC_PAGE_SPRITES;//TIC_BANK_SPRITES;
                 clearCanvasSelection(sprite);
             }
         }
@@ -1744,7 +1806,7 @@ static void scanline(tic_mem* tic, s32 row, void* data)
         memcpy(&tic->ram.vram.palette, getBankPalette(), sizeof(tic_palette));
 }
 
-static void overline(tic_mem* tic, void* data)
+static void overline(tic_mem* tic, void* data)	//UI, empty spaces fillers between editors
 {
     static const tic_rect bg[] = 
     {
@@ -1758,6 +1820,9 @@ static void overline(tic_mem* tic, void* data)
         {PaletteX + PaletteW, PaletteY, SheetX - PaletteX - PaletteW, PaletteH},
 
         {0, PaletteY + PaletteH, SheetX, TIC80_HEIGHT - PaletteY - PaletteH},
+		
+		{SheetX,0, SheetW+1, SheetY},//filler for spritesheet top
+		{SheetX,SheetY+TIC_SPRITESHEET_SIZE, SheetW+1, TIC80_HEIGHT-SheetH-SheetY} //filler for spritesheet bottom
     };
 
     Sprite* sprite = (Sprite*)data;
@@ -1774,7 +1839,7 @@ static void overline(tic_mem* tic, void* data)
         : drawTools(sprite, 12, 96);
 
     drawPaletteOvr(sprite, 24, 112);
-    drawSheetOvr(sprite, TIC80_WIDTH - TIC_SPRITESHEET_SIZE - 1, 7);
+    drawSheetOvr(sprite, SheetX,SheetY);
     
     drawSpriteToolbar(sprite);
     drawToolbar(tic, false);

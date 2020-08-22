@@ -22,6 +22,8 @@
 
 #pragma once
 
+#define TIC_BUILD_WITH_LUA
+
 #if !defined(TIC_BUILD_WITH_LUA) && 	\
 	!defined(TIC_BUILD_WITH_MOON) && 	\
 	!defined(TIC_BUILD_WITH_FENNEL) && 	\

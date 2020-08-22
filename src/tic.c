@@ -69,7 +69,7 @@ typedef struct
 
 STATIC_ASSERT(tic_bank_bits, TIC_BANK_BITS == 3);
 STATIC_ASSERT(tic_chunk_size, sizeof(Chunk) == 4);
-STATIC_ASSERT(tic_map, sizeof(tic_map) < 1024*32);
+STATIC_ASSERT(tic_map, sizeof(tic_map) < 1024*64);//
 STATIC_ASSERT(tic_sample, sizeof(tic_sample) == 66);
 STATIC_ASSERT(tic_track_pattern, sizeof(tic_track_pattern) == 3*MUSIC_PATTERN_ROWS);
 STATIC_ASSERT(tic_track, sizeof(tic_track) == 3*MUSIC_FRAMES+3);

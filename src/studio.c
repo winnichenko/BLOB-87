@@ -53,6 +53,7 @@
 #define FRAME_SIZE (TIC80_FULLWIDTH * TIC80_FULLHEIGHT * sizeof(u32))
 #define POPUP_DUR (TIC80_FRAMERATE*2)
 
+#define TIC80_PRO
 #if defined(TIC80_PRO)
 #define TIC_EDITOR_BANKS (TIC_BANKS)
 #else
