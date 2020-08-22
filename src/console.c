@@ -1,4 +1,4 @@
-// MIT License
+﻿// MIT License
 
 // Copyright (c) 2017 Vadim Grigoruk @nesbox // grigoruk@gmail.com
 
@@ -2506,7 +2506,7 @@ static void printTable(Console* console, const char* text)
 static void printRamInfo(Console* console, s32 addr, const char* name, s32 size)
 {
     char buf[STUDIO_TEXT_BUFFER_WIDTH];
-    sprintf(buf, "\n| %05X | %-17s | %-5i |", addr, name, size);
+    sprintf(buf, "\n| %05X | %-17s | %-7i |", addr, name, size);
     printTable(console, buf);
 }
 
@@ -2514,17 +2514,18 @@ static void onConsoleRamCommand(Console* console, const char* param)
 {
     printLine(console);
 
-    printTable(console, "\n+-----------------------------------+" \
-                        "\n|         1408K RAM LAYOUT          |" \
-                        "\n+-------+-------------------+-------+" \
-                        "\n| ADDR  | INFO              | SIZE  |" \
-                        "\n+-------+-------------------+-------+");
+    printTable(console, "\n+-------------------------------------╗" \
+                        "\n|          1408K RAM LAYOUT           |" \
+                        "\n+-------+-------------------+---------+" \
+                        "\n| ADDR  | INFO              |  SIZE   |" \
+                        "\n+-------+-------------------+---------+");
 
     static const struct{s32 addr; const char* info;} Layout[] =
     {
         {offsetof(tic_ram, tiles),                      "TILES"},
         {offsetof(tic_ram, sprites),                    "SPRITES"},
         {offsetof(tic_ram, map),                        "MAP"},
+		{offsetof(tic_ram, mapflags),					"MAP FLAGS"},
         {offsetof(tic_ram, input.gamepads),             "GAMEPADS"},
         {offsetof(tic_ram, input.mouse),                "MOUSE"},
         {offsetof(tic_ram, input.keyboard),             "KEYBOARD"},
@@ -2546,7 +2547,7 @@ static void onConsoleRamCommand(Console* console, const char* param)
     for(s32 i = 0; i < COUNT_OF(Layout)-1; i++)
         printRamInfo(console, Layout[i].addr, Layout[i].info, Layout[i+1].addr-Layout[i].addr);
 
-    printTable(console, "\n+-------+-------------------+-------+");
+    printTable(console, "\n+-------+-------------------+---------+");
 
     printLine(console);
     commandDone(console);
@@ -2556,11 +2557,11 @@ static void onConsoleVRamCommand(Console* console, const char* param)
 {
     printLine(console);
 
-    printTable(console, "\n+-----------------------------------+" \
-                        "\n|           64K VRAM LAYOUT         |" \
-                        "\n+-------+-------------------+-------+" \
-                        "\n| ADDR  | INFO              | SIZE  |" \
-                        "\n+-------+-------------------+-------+");
+    printTable(console, "\n+-------------------------------------+" \
+                        "\n|           64K VRAM LAYOUT           |" \
+                        "\n+-------+-------------------+---------+" \
+                        "\n| ADDR  | INFO              |  SIZE   |" \
+                        "\n+-------+-------------------+---------+");
 
     static const struct{s32 addr; const char* info;} Layout[] =
     {
@@ -2577,7 +2578,7 @@ static void onConsoleVRamCommand(Console* console, const char* param)
     for(s32 i = 0; i < COUNT_OF(Layout)-1; i++)
         printRamInfo(console, Layout[i].addr, Layout[i].info, Layout[i+1].addr-Layout[i].addr);
 
-    printTable(console, "\n+-------+-------------------+-------+");
+    printTable(console, "\n+-------+-------------------+---------+");
 
     printLine(console);
     commandDone(console);

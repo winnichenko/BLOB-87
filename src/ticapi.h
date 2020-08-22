@@ -104,7 +104,9 @@ typedef struct
     macro(sfx,          6,  void,   tic_mem*, s32 index, s32 note, s32 octave, s32 duration, s32 channel, s32 volume, s32 speed) \
     macro(map,          9,  void,   tic_mem*, const tic_map* src, const tic_tiles* tiles, s32 x, s32 y, s32 width, s32 height, s32 sx, s32 sy, u8 chromakey, s32 scale, RemapFunc remap, void* data) \
     macro(mget,         2,  u16,    tic_mem*, const tic_map* src, s32 x, s32 y) \
+    macro(mfget,        2,  u8,     tic_mem*, const tic_mapflags* src, s32 x, s32 y) \
     macro(mset,         3,  void,   tic_mem*, tic_map* src, s32 x, s32 y, u16 value) \
+    macro(mfset,        3,  void,   tic_mem*, tic_mapflags* src, s32 x, s32 y, u8 value) \
     macro(peek,         1,  u8,     tic_mem*, s32 address) \
     macro(poke,         2,  void,   tic_mem*, s32 address, u8 value) \
     macro(peek4,        1,  u8,     tic_mem*, s32 address) \

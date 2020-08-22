@@ -512,6 +512,26 @@ static s32 lua_mget(lua_State* lua)
     return 0;
 }
 
+static s32 lua_mfget(lua_State* lua)
+{
+	s32 top = lua_gettop(lua);
+
+	if (top == 2)
+	{
+		s32 x = getLuaNumber(lua, 1);
+		s32 y = getLuaNumber(lua, 2);
+
+		tic_mem* tic = (tic_mem*)getLuaMachine(lua);
+
+		u8 value = tic_api_mfget(tic, &tic->ram.mapflags, x, y);
+		lua_pushinteger(lua, value);
+		return 1;
+	}
+	else luaL_error(lua, "invalid params, mfget(x,y)\n");
+
+	return 0;
+}
+
 static s32 lua_mset(lua_State* lua)
 {
     s32 top = lua_gettop(lua);
@@ -529,6 +549,25 @@ static s32 lua_mset(lua_State* lua)
     else luaL_error(lua, "invalid params, mset(x,y)\n");
 
     return 0;
+}
+
+static s32 lua_mfset(lua_State* lua)
+{
+	s32 top = lua_gettop(lua);
+
+	if (top == 3)
+	{
+		s32 x = getLuaNumber(lua, 1);
+		s32 y = getLuaNumber(lua, 2);
+		u8 val = getLuaNumber(lua, 3);
+
+		tic_mem* tic = (tic_mem*)getLuaMachine(lua);
+
+		tic_api_mfset(tic, &tic->ram.mapflags, x, y, val);
+	}
+	else luaL_error(lua, "invalid params, mfset(x,y)\n");
+
+	return 0;
 }
 
 typedef struct

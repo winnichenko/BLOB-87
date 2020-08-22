@@ -313,8 +313,11 @@ static void drawTileIndex(Map* map, s32 x, s32 y) //draw tile index on a toolbar
 
             mx /= TIC_SPRITESIZE;
             my /= TIC_SPRITESIZE;
+			if (!map->map_flags.show)
+				index = (mx + my * SHEET_COLS)+TIC_PAGE_SPRITES*map->page;
+			else
+				index = (mx + my * SHEET_COLS) + TIC_PAGE_SPRITES;
 
-            index = (mx + my * SHEET_COLS)+TIC_PAGE_SPRITES*map->page;
         }
     }
     else
@@ -339,10 +342,17 @@ static void drawTileIndex(Map* map, s32 x, s32 y) //draw tile index on a toolbar
 
 static void drawTilePageNum(Map* map, s32 x, s32 y) //draw tile index on a toolbar
 {
-	s32 index = -1;
+	//s32 index = -1;
 	char buf[] = "P9"; 
 	sprintf(buf, "P%i", map->page);
 
+	tic_api_print(map->tic, buf, x, y, tic_color_14, true, 1, false);
+
+}
+static void drawFlagMode(Map* map, s32 x, s32 y)
+{
+	char buf[] = "F";
+	//sprintf(buf,"F", )
 	tic_api_print(map->tic, buf, x, y, tic_color_14, true, 1, false);
 
 }
@@ -352,7 +362,11 @@ static void drawMapToolbar(Map* map, s32 x, s32 y)
     tic_api_rect(map->tic, 0, 0, TIC80_WIDTH, TOOLBAR_SIZE, tic_color_12);
 
     drawTileIndex(map, TIC80_WIDTH/2 - TIC_FONT_WIDTH*3, y);
-	drawTilePageNum(map, TIC80_WIDTH-72,y);
+	//drawTilePageNum(map, TIC80_WIDTH-72,y);
+	if (map->map_flags.show)
+	{
+		drawFlagMode(map, TIC80_WIDTH - 72, y);
+	}
 
     x = drawSheetButton(map, x, 0);
     x = drawFillButton(map, x, 0);
@@ -393,69 +407,122 @@ static void drawSheetReg(Map* map, s32 x, s32 y) // draw spritesheet
 	
 	//tic_api_rect(map->tic, MapSheetRect.x-1, 0, MapSheetRect.w+2, MapSheetRect.y, tic_color_14);
 	tic_api_rect(map->tic, MapSheetRect.x-4, 0, MapSheetRect.w+5, MapSheetRect.h+MapSheetRect.y+4, tic_color_14);
-	
-	for (s32 i = 0; i < 8; i++) // draw paginator
+
+	if (!map->map_flags.show) //draw sprite sheet
 	{
-		//static char Label[] = "SWITCH PAGE";
-		tic_rect rectp = { MapSheetRect.x-1 + i * 8, MapSheetRect.y - 9, 7,7 };
-		bool over = false;
-		if (checkMousePos(&rectp))
+		for (s32 i = 0; i < 8; i++) // draw paginator
+		{
+			//static char Label[] = "SWITCH PAGE";
+			tic_rect rectp = { MapSheetRect.x - 1 + i * 8, MapSheetRect.y - 9, 7,7 };
+			bool over = false;
+			if (checkMousePos(&rectp))
+			{
+				setCursor(tic_cursor_hand);
+				over = true;
+				//showTooltip("SWITCH PAGE [Tab]");
+				//tic_api_print(tic, Label + (char[]) {i,'/0'}, 20, 0, tic_color_12, false, 1, false);
+				if (checkMouseClick(&rectp, tic_mouse_left))
+				{
+					//sprite->index = TIC_PAGE_SPRITES * i;
+					map->page = i;
+				}
+			}
+			tic_api_rect(map->tic, rectp.x, rectp.y, rectp.w, rectp.h, tic_color_15);
+			tic_api_rect(map->tic, rectp.x + 1, rectp.y + 1, rectp.w - 2, rectp.h - 2, i == map->page ? tic_color_12 : over ? tic_color_2 : tic_color_15);
+		}
+
+		if (checkMousePos(&rect))
 		{
 			setCursor(tic_cursor_hand);
-			over = true;
-			//showTooltip("SWITCH PAGE [Tab]");
-			//tic_api_print(tic, Label + (char[]) {i,'/0'}, 20, 0, tic_color_12, false, 1, false);
-			if (checkMouseClick(&rectp, tic_mouse_left))
+
+			if (checkMouseDown(&rect, tic_mouse_left))
 			{
-				//sprite->index = TIC_PAGE_SPRITES * i;
-				map->page = i;
+				s32 mx = getMouseX() - rect.x;
+				s32 my = getMouseY() - rect.y;
+
+				mx /= TIC_SPRITESIZE;
+				my /= TIC_SPRITESIZE;
+
+				if (map->sheet.drag)
+				{
+					s32 rl = MIN(mx, map->sheet.start.x);
+					s32 rt = MIN(my, map->sheet.start.y);
+					s32 rr = MAX(mx, map->sheet.start.x);
+					s32 rb = MAX(my, map->sheet.start.y);
+
+					map->sheet.rect = (tic_rect) { rl, rt, rr - rl + 1, rb - rt + 1 };
+
+					map->mode = MAP_DRAW_MODE;
+				}
+				else
+				{
+					map->sheet.drag = true;
+					map->sheet.start = (tic_point) { mx, my };
+				}
+			}
+			else
+			{
+				if (map->sheet.drag)
+					map->sheet.show = false;
+
+				map->sheet.drag = false;
 			}
 		}
-		tic_api_rect(map->tic, rectp.x, rectp.y, rectp.w, rectp.h, tic_color_15);
-		tic_api_rect(map->tic, rectp.x + 1, rectp.y + 1, rectp.w - 2, rectp.h - 2, i == map->page ? tic_color_12 : over ? tic_color_2 : tic_color_15);
+
+		for (s32 j = 0, index = 0; j < rect.h; j += TIC_SPRITESIZE)
+			for (s32 i = 0; i < rect.w; i += TIC_SPRITESIZE, index++)
+				tic_api_spr(map->tic, getBankTiles(), index + TIC_PAGE_SPRITES * map->page, x + i, y + j, 1, 1, NULL, 0, 1, tic_no_flip, tic_no_rotate);
+	} 
+	else //draw flag sheet 
+	{
+
+		if (checkMousePos(&rect))
+		{
+			setCursor(tic_cursor_hand);
+
+			if (checkMouseDown(&rect, tic_mouse_left))
+			{
+				s32 mx = getMouseX() - rect.x;
+				s32 my = getMouseY() - rect.y;
+
+				mx /= TIC_SPRITESIZE;
+				my /= TIC_SPRITESIZE;
+				//map->sheet.drag = true;
+				
+				if (map->sheet.drag)
+				{
+					
+					s32 rl = MIN(mx, map->sheet.start.x);
+					s32 rt = MIN(my, map->sheet.start.y);
+					/*
+					s32 rr = MAX(mx, map->sheet.start.x);
+					s32 rb = MAX(my, map->sheet.start.y);
+					*/
+					map->sheet.rect = (tic_rect) { rl, rt, 1 ,1};
+					map->map_flags.current_flag = mx + my * 16;
+					map->mode = MAP_DRAW_MODE;
+					
+
+				}
+				else
+				{
+					map->sheet.drag = true;
+					map->sheet.start = (tic_point) { mx, my };
+				}
+				
+			}
+			else
+			{
+				if (map->sheet.drag)
+					map->sheet.show = false;
+
+				map->sheet.drag = false;
+			}
+		}
+		for (s32 j = 0, index = 256; j < rect.h; j += TIC_SPRITESIZE)
+			for (s32 i = 0; i < rect.w; i += TIC_SPRITESIZE, index++)
+				tic_api_spr(map->tic, &getConfig()->cart->bank0.tiles, index, x + i, y + j, 1, 1, NULL, 0, 1, tic_no_flip, tic_no_rotate);
 	}
-
-    if(checkMousePos(&rect))
-    {
-        setCursor(tic_cursor_hand);
-		
-        if(checkMouseDown(&rect, tic_mouse_left))
-        {
-            s32 mx = getMouseX() - rect.x;
-            s32 my = getMouseY() - rect.y;
-
-            mx /= TIC_SPRITESIZE;
-            my /= TIC_SPRITESIZE;
-
-            if(map->sheet.drag)
-            {
-                s32 rl = MIN(mx, map->sheet.start.x);
-                s32 rt = MIN(my, map->sheet.start.y);
-                s32 rr = MAX(mx, map->sheet.start.x);
-                s32 rb = MAX(my, map->sheet.start.y);
-
-                map->sheet.rect = (tic_rect){rl, rt, rr-rl+1, rb-rt+1};
-
-                map->mode = MAP_DRAW_MODE;
-            }
-            else
-            {
-                map->sheet.drag = true;
-                map->sheet.start = (tic_point){mx, my};
-            }
-        }
-        else
-        {
-            if(map->sheet.drag)
-                map->sheet.show = false;
-            
-            map->sheet.drag = false;
-        }
-    }
-
-    for(s32 j = 0, index = 0; j < rect.h; j += TIC_SPRITESIZE)
-        for(s32 i = 0; i < rect.w; i += TIC_SPRITESIZE, index++)
-            tic_api_spr(map->tic, getBankTiles(), index+TIC_PAGE_SPRITES*map->page, x + i, y + j, 1, 1, NULL, 0, 1, tic_no_flip, tic_no_rotate);
 }
 
 static void drawCursorPos(Map* map, s32 x, s32 y)
@@ -481,15 +548,22 @@ static void drawCursorPos(Map* map, s32 x, s32 y)
 
 static void setMapSprite(Map* map, s32 x, s32 y) //put sprite on map
 {
-    s32 mx = map->sheet.rect.x; //it just stores the rect but not the real indexes. so changing the page also changing indexes to draw with  
-    s32 my = map->sheet.rect.y; // might be better to work with absolute index. TODO?
+	if (!map->map_flags.show)
+	{
+		s32 mx = map->sheet.rect.x; //it just stores the rect but not the real indexes. so changing the page also changing indexes to draw with  
+		s32 my = map->sheet.rect.y; // might be better to work with absolute index. TODO?
 
-    for(s32 j = 0; j < map->sheet.rect.h; j++)
-        for(s32 i = 0; i < map->sheet.rect.w; i++)
-            //tic_api_mset(map->tic, map->src, (x+i)%TIC_MAP_WIDTH, (y+j)%TIC_MAP_HEIGHT, ((mx+i) + (my+j) * SHEET_COLS)+TIC_PAGE_SPRITES*map->page);
-            tic_api_mset(map->tic, map->src, x+i%TIC_MAP_WIDTH, y+j%TIC_MAP_HEIGHT, ((mx+i) + (my+j) * SHEET_COLS)+TIC_PAGE_SPRITES*map->page);
+		for (s32 j = 0; j < map->sheet.rect.h; j++)
+			for (s32 i = 0; i < map->sheet.rect.w; i++)
+				//tic_api_mset(map->tic, map->src, (x+i)%TIC_MAP_WIDTH, (y+j)%TIC_MAP_HEIGHT, ((mx+i) + (my+j) * SHEET_COLS)+TIC_PAGE_SPRITES*map->page);
+				tic_api_mset(map->tic, map->src, x + i % TIC_MAP_WIDTH, y + j % TIC_MAP_HEIGHT, ((mx + i) + (my + j) * SHEET_COLS) + TIC_PAGE_SPRITES * map->page);
 
-    history_add(map->history);
+		history_add(map->history);
+	}
+	else
+	{
+		tic_api_mfset(map->tic, map->src_flags, x, y, map->map_flags.current_flag);
+	}
 }
 
 static tic_point getCursorPos(Map* map)
@@ -943,10 +1017,16 @@ static void drawMapReg(Map* map)
     s32 scrollY = map->scroll.y % TIC_SPRITESIZE;
 
     tic_mem* tic = map->tic;
-    
-	tic_api_map(tic, map->src, getBankTiles(), map->scroll.x / TIC_SPRITESIZE, map->scroll.y / TIC_SPRITESIZE, 
-        TIC_MAP_SCREEN_WIDTH + 1, TIC_MAP_SCREEN_HEIGHT + 1, -scrollX, -scrollY, -1, 1, NULL, NULL);
-	
+	if (!map->map_flags.show)
+	{
+		tic_api_map(tic, map->src, getBankTiles(), map->scroll.x / TIC_SPRITESIZE, map->scroll.y / TIC_SPRITESIZE,
+			TIC_MAP_SCREEN_WIDTH + 1, TIC_MAP_SCREEN_HEIGHT + 1, -scrollX, -scrollY, -1, 1, NULL, NULL);
+	}
+	else
+	{
+		tic_api_flagmap(tic, map->src_flags, &getConfig()->cart->bank0.tiles, map->scroll.x / TIC_SPRITESIZE, map->scroll.y / TIC_SPRITESIZE,
+			TIC_MAP_SCREEN_WIDTH + 1, TIC_MAP_SCREEN_HEIGHT + 1, -scrollX, -scrollY, -1);
+	}
 	
     if(map->canvas.grid || map->scroll.active)
         drawGrid(map);
@@ -1106,6 +1186,7 @@ static void processKeyboard(Map* map)
 		else if(keyWasPressed(tic_key_minus)) {if (map->page > 0) map->page -=1;}
         else if(keyWasPressed(tic_key_delete)) deleteSelection(map);
         else if(keyWasPressed(tic_key_grave)) map->canvas.grid = !map->canvas.grid;
+		else if(keyWasPressed(tic_key_f)) { map->map_flags.show = !map->map_flags.show; }
     }
 
     enum{Step = 1};
@@ -1133,7 +1214,6 @@ static void tick(Map* map)
     processKeyboard(map);
 
     drawMapReg(map); //draw map field
-    //drawSheetReg(map, TIC80_WIDTH - TIC_SPRITESHEET_SIZE - 1, TOOLBAR_SIZE+8); // draw spritesheet
     drawSheetReg(map, BLOB87_MAPSHEETX,BLOB87_MAPSHEETY); // draw spritesheet
 }
 
@@ -1197,7 +1277,7 @@ static void overline(tic_mem* tic, void* data)
     drawToolbar(map->tic, false);
 }
 
-void initMap(Map* map, tic_mem* tic, tic_map* src)
+void initMap(Map* map, tic_mem* tic, tic_map* src, tic_mapflags* mflags)
 {
     if(map->history) history_delete(map->history);
     
@@ -1206,6 +1286,7 @@ void initMap(Map* map, tic_mem* tic, tic_map* src)
         .tic = tic,
         .tick = tick,
         .src = src,
+		.src_flags = mflags,
 		.page = 0,
         .mode = MAP_DRAW_MODE,
         .canvas = 
@@ -1221,6 +1302,11 @@ void initMap(Map* map, tic_mem* tic, tic_map* src)
             .start = {0, 0},
             .drag = false,
         },
+		.map_flags = 
+		{
+			.show = false,
+			.current_flag = 0,
+		},
         .select = 
         {
             .rect = {0, 0, 0, 0},

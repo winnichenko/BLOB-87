@@ -350,6 +350,11 @@ typedef struct
 
 typedef struct
 {
+	u8 data[TIC_MAP_WIDTH*TIC_MAP_HEIGHT];
+} tic_mapflags;
+
+typedef struct
+{
     u8 data[TIC_SPRITESIZE * TIC_SPRITESIZE * TIC_PALETTE_BPP / BITS_IN_BYTE]; // this is pixels!
 } tic_tile;
 
@@ -390,13 +395,14 @@ typedef struct
 
 typedef struct
 {
-    tic_tiles   tiles;
-    tic_tiles   sprites;
-    tic_map     map;
-    tic_sfx     sfx;
-    tic_music   music;
-    tic_palette palette;
-    tic_flags   flags;
+    tic_tiles		tiles;
+    tic_tiles		sprites;
+    tic_map			map;
+    tic_sfx			sfx;
+    tic_music		music;
+    tic_palette		palette;
+    tic_flags		flags;
+	tic_mapflags	mapflags;
 } tic_bank;
 
 typedef struct
@@ -475,6 +481,7 @@ typedef union
         tic_tiles           tiles;
         tic_tiles           sprites;
         tic_map             map;
+		tic_mapflags		mapflags;
         tic80_input         input;
         tic_sfx_pos         sfxpos[TIC_SOUND_CHANNELS];
         tic_sound_register  registers[TIC_SOUND_CHANNELS];

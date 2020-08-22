@@ -1241,7 +1241,7 @@ static void initModules()
     for(s32 i = 0; i < TIC_EDITOR_BANKS; i++)
     {
         initSprite(impl.banks.sprite[i], impl.studio.tic, &tic->cart.banks[i].tiles);
-        initMap(impl.banks.map[i], impl.studio.tic, &tic->cart.banks[i].map);
+        initMap(impl.banks.map[i], impl.studio.tic, &tic->cart.banks[i].map, &tic->cart.banks[i].mapflags);
         initSfx(impl.banks.sfx[i], impl.studio.tic, &tic->cart.banks[i].sfx);
         initMusic(impl.banks.music[i], impl.studio.tic, &tic->cart.banks[i].music);
     }

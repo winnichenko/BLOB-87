@@ -31,6 +31,7 @@ struct Map
     tic_mem* tic;
 
     tic_map* src;
+	tic_mapflags *src_flags;
     
     s32 tickCounter;
 
@@ -58,6 +59,12 @@ struct Map
         tic_point start;
         bool drag;
     } sheet;
+
+	struct
+	{
+		bool show;
+		u8 current_flag;
+	} map_flags;
 
     struct
     {
@@ -88,5 +95,5 @@ struct Map
     void (*overline)(tic_mem* tic, void* data);
 };
 
-void initMap(Map*, tic_mem*, tic_map* src);
+void initMap(Map*, tic_mem*, tic_map* src, tic_mapflags* mflags);
 void freeMap(Map* map);

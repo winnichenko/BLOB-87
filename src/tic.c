@@ -57,6 +57,7 @@ typedef enum
     CHUNK_PATTERNS_DEP, // 13 - deprecated chunk
     CHUNK_MUSIC,        // 14
     CHUNK_PATTERNS,     // 15
+	CHUNK_MAPFLAGS,		// 16
 } ChunkType;
 
 typedef struct
@@ -371,7 +372,6 @@ static void drawTile(tic_machine* machine, const tic_tile* buffer, s32 x, s32 y,
 #undef INDEX_XY
 
 static void drawMap(tic_machine* machine, const tic_map* src, const tic_tiles* tiles, s32 x, s32 y, s32 width, s32 height, s32 sx, s32 sy, u8 chromakey, s32 scale, RemapFunc remap, void* data)
-//static void drawMap(tic_mem* machine, const tic_map* src, const tic_tiles* tiles, s32 x, s32 y, s32 width, s32 height, s32 sx, s32 sy, u8 chromakey, s32 scale, RemapFunc remap, void* data)
 {
     const s32 size = TIC_SPRITESIZE * scale;
 
@@ -393,8 +393,29 @@ static void drawMap(tic_machine* machine, const tic_map* src, const tic_tiles* t
                 remap(data, mi, mj, &tile);
 
            drawTile(machine, tiles->data + tile.index, ii, jj, &chromakey, 1, scale, tile.flip, tile.rotate);
-            //drawTile((tic_machine*)machine, tiles->data + index, ii, jj, &chromakey, 1, scale, tile.flip, tile.rotate);
         }
+}
+
+static void drawFlags(tic_machine* machine, const tic_mapflags* src, const tic_tiles* tiles, s32 x, s32 y, s32 width, s32 height, s32 sx, s32 sy, u8 chromakey)
+{
+	const s32 size = TIC_SPRITESIZE;
+
+	for (s32 j = y, jj = sy; j < y + height; j++, jj += size)
+		for (s32 i = x, ii = sx; i < x + width; i++, ii += size)
+		{
+			s32 mi = i;
+			s32 mj = j;
+
+			while (mi < 0) mi += TIC_MAP_WIDTH;
+			while (mj < 0) mj += TIC_MAP_HEIGHT;
+			while (mi >= TIC_MAP_WIDTH) mi -= TIC_MAP_WIDTH;
+			while (mj >= TIC_MAP_HEIGHT) mj -= TIC_MAP_HEIGHT;
+
+			s32 index = mi + mj * TIC_MAP_WIDTH;
+			RemapResult tile = { *(src->data + index), tic_no_flip, tic_no_rotate };
+
+			drawTile(machine, tiles->data + tile.index+256, ii, jj, &chromakey, 1, 1, tic_no_flip, tic_no_rotate);
+		}
 }
 
 static void resetSfxPos(tic_channel_data* channel)
@@ -734,7 +755,7 @@ s32 tic_api_print(tic_mem* memory, const char* text, s32 x, s32 y, u8 color, boo
 
 static void drawSprite(tic_mem* memory, const tic_tiles* src, s32 index, s32 x, s32 y, u8* colors, s32 count, s32 scale, tic_flip flip, tic_rotate rotate)
 {
-    if(index < TIC_SPRITES)
+    if(0< index < TIC_SPRITES)
         drawTile((tic_machine*)memory, src->data + index, x, y, colors, count, scale, flip, rotate);
 }
 
@@ -1164,8 +1185,13 @@ void tic_api_textri(tic_mem* memory, float x1, float y1, float x2, float y2, flo
 void tic_api_map(tic_mem* memory, const tic_map* src, const tic_tiles* tiles, s32 x, s32 y, s32 width, s32 height, s32 sx, s32 sy, u8 chromakey, s32 scale, RemapFunc remap, void* data)
 {
     drawMap((tic_machine*)memory, src, tiles, x, y, width, height, sx, sy, chromakey, scale, remap, data);
-    //drawMap(memory, src, tiles, x, y, width, height, sx, sy, chromakey, scale, remap, data);
 }
+
+void tic_api_flagmap(tic_mem* memory, const tic_mapflags* src, const tic_tiles* tiles, s32 x, s32 y, s32 width, s32 height, s32 sx, s32 sy, u8 chromakey)
+{
+	drawFlags((tic_machine*)memory, src, tiles, x, y, width, height, sx, sy, chromakey);
+}
+
 
 void tic_api_mset(tic_mem* memory, tic_map* src, s32 x, s32 y, u16 value)
 {
@@ -1180,6 +1206,22 @@ u16 tic_api_mget(tic_mem* memory, const tic_map* src, s32 x, s32 y)
     if(x < 0 || x >= TIC_MAP_WIDTH || y < 0 || y >= TIC_MAP_HEIGHT) return 0;
     
     return (CLAMP(*(src->data + y * TIC_MAP_WIDTH + x),0,2047)); // clamping for safety
+}
+
+void tic_api_mfset(tic_mem* memory, tic_mapflags* src, s32 x, s32 y, u8 value) //set map flag
+{
+	value = CLAMP(value, 0, 255); //safety measure
+	if (x < 0 || x >= TIC_MAP_WIDTH || y < 0 || y >= TIC_MAP_HEIGHT) return;
+
+	*(src->data + y * TIC_MAP_WIDTH + x) = value;
+
+}
+
+u8 tic_api_mfget(tic_mem* memory, const tic_mapflags* src, s32 x, s32 y) //get map flag
+{
+	if (x < 0 || x >= TIC_MAP_WIDTH || y < 0 || y >= TIC_MAP_HEIGHT) return 0;
+
+	return (CLAMP(*(src->data + y * TIC_MAP_WIDTH + x), 0, 255)); // clamping for safety
 }
 
 static inline void setLinePixel(tic_mem* tic, s32 x, s32 y, u8 color)
@@ -1610,6 +1652,7 @@ void tic_api_sync(tic_mem* tic, u32 mask, s32 bank, bool toCart)
         {offsetof(tic_bank, tiles),     offsetof(tic_ram, tiles),           sizeof(tic_tiles)   },
         {offsetof(tic_bank, sprites),   offsetof(tic_ram, sprites),         sizeof(tic_tiles)   },
         {offsetof(tic_bank, map),       offsetof(tic_ram, map),             sizeof(tic_map)     },
+		{offsetof(tic_bank,	mapflags),	offsetof(tic_ram, mapflags),		sizeof(tic_mapflags)},
         {offsetof(tic_bank, sfx),       offsetof(tic_ram, sfx),             sizeof(tic_sfx)     },
         {offsetof(tic_bank, music),     offsetof(tic_ram, music),           sizeof(tic_music)   },
         {offsetof(tic_bank, palette),   offsetof(tic_ram, vram.palette),    sizeof(tic_palette) },
@@ -1936,6 +1979,7 @@ void tic_core_load(tic_cartridge* cart, const u8* buffer, s32 size)
         case CHUNK_PALETTE:     LOAD_CHUNK(cart->banks[chunk.bank].palette);        break;
         case CHUNK_FLAGS:       LOAD_CHUNK(cart->banks[chunk.bank].flags);          break;
         case CHUNK_CODE:        LOAD_CHUNK(code[chunk.bank].data);                  break;
+		case CHUNK_MAPFLAGS:	LOAD_CHUNK(cart->banks[chunk.bank].mapflags);		break;
         case CHUNK_COVER:
             LOAD_CHUNK(cart->cover.data);
             cart->cover.size = chunk.size;
@@ -2051,6 +2095,7 @@ s32 tic_core_save(const tic_cartridge* cart, u8* buffer)
         buffer = SAVE_CHUNK(CHUNK_MUSIC,    cart->banks[i].music.tracks,    i);
         buffer = SAVE_CHUNK(CHUNK_PALETTE,  cart->banks[i].palette,         i);
         buffer = SAVE_CHUNK(CHUNK_FLAGS,    cart->banks[i].flags,           i);
+		buffer = SAVE_CHUNK(CHUNK_MAPFLAGS, cart->banks[i].mapflags,		i);
     }
 
     buffer = SAVE_CHUNK(CHUNK_CODE, cart->code, 0);   
