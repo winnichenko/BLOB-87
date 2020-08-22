@@ -1698,14 +1698,8 @@ static void drawSpriteToolbar(Sprite* sprite)
 			if (checkMouseClick(&rect, tic_mouse_left))
 			{
 				sprite->index = TIC_PAGE_SPRITES * i;
-				//if (impl.bank.chained)
-				//	memset(impl.bank.indexes, i, sizeof impl.bank.indexes);
-				//else impl.bank.indexes[mode] = i;
 			}
 		}
-		//if (i == sprite->index/TIC_PAGE_SPRITES)
-		//	tic_api_rect(tic, rect.x, rect.y, rect.w, rect.h, tic_color_2);
-		//tic_api_print(tic, (char[]) { '0' + i, '\0' }, rect.x + 1, rect.y + 1, i == sprite->index/TIC_PAGE_SPRITES ? tic_color_12 : over ? tic_color_2 : tic_color_13, false, 1, false);
 		tic_api_rect(tic, rect.x, rect.y, rect.w, rect.h, tic_color_15);
 		tic_api_rect(tic, rect.x+1, rect.y+1, rect.w-2, rect.h-2, i == sprite->index / TIC_PAGE_SPRITES ? tic_color_12 : over ? tic_color_2: tic_color_15);
 	}

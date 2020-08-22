@@ -42,7 +42,6 @@
 #define TIC_SPRITES (TIC_BANK_SPRITES * TIC_SPRITE_BANKS)
 
 #define TIC_SPRITESHEET_SIZE 128 //128 Horizontal size of the spritesheet
-#define TIC_SPRITESHEET_SIZE_Y 256 //Vertical size of the spritesheet
 
 
 #define TIC_MAP_ROWS (TIC_SPRITESIZE)
@@ -344,7 +343,8 @@ typedef struct
 typedef struct
 {
     //u8 data[TIC_MAP_WIDTH * TIC_MAP_HEIGHT];
-    u16 data[TIC_MAP_WIDTH * TIC_MAP_HEIGHT];
+    u16 data[TIC_MAP_WIDTH * TIC_MAP_HEIGHT]; //256*224*2 = 114,688
+	//u8 flags[TIC_MAP_WIDTH * TIC_MAP_HEIGHT]; //256*224 = 57,344 TODO map flags
 } tic_map;
 
 typedef struct

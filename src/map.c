@@ -25,7 +25,9 @@
 
 #define SHEET_COLS (TIC_SPRITESHEET_SIZE / TIC_SPRITESIZE)
 #define BLOB89_MAPSHEETX (TIC80_WIDTH - TIC_SPRITESHEET_SIZE - 1)
-#define BLOB89_MAPSHEETY (16)
+#define BLOB89_MAPSHEETY (19)
+
+tic_rect MapSheetRect = { BLOB89_MAPSHEETX, BLOB89_MAPSHEETY, TIC_SPRITESHEET_SIZE, TIC_SPRITESHEET_SIZE };
 
 #define MAP_WIDTH (TIC80_WIDTH)
 #define MAP_HEIGHT (TIC80_HEIGHT - TOOLBAR_SIZE)
@@ -112,11 +114,11 @@ static s32 drawGridButton(Map* map, s32 x, s32 y)
     static const u8 GridIcon[] =
     {
         0b00000000,
-        0b00101000,
         0b01111100,
-        0b00101000,
+        0b01010100,
         0b01111100,
-        0b00101000,
+        0b01010100,
+        0b01111100,
         0b00000000,
         0b00000000,
     };
@@ -301,7 +303,8 @@ static void drawTileIndex(Map* map, s32 x, s32 y) //draw tile index on a toolbar
 
     if(sheetVisible(map))
     {
-        tic_rect rect = {TIC80_WIDTH - TIC_SPRITESHEET_SIZE - 1, TOOLBAR_SIZE, TIC_SPRITESHEET_SIZE, TIC_SPRITESHEET_SIZE};
+        //tic_rect rect = {TIC80_WIDTH - TIC_SPRITESHEET_SIZE - 1, TOOLBAR_SIZE, TIC_SPRITESHEET_SIZE, TIC_SPRITESHEET_SIZE};
+        tic_rect rect = MapSheetRect;
         
         if(checkMousePos(&rect))
         {
@@ -361,14 +364,15 @@ static void drawMapToolbar(Map* map, s32 x, s32 y)
     drawWorldButton(map, x, 0);
 }
 
-static void drawSheetOvr(Map* map, s32 x, s32 y)
+static void drawSheetOvr(Map* map, s32 x, s32 y) // white border around map spritesheet
 {
     if(!sheetVisible(map))return;
 
-    tic_rect rect = {x, y, TIC_SPRITESHEET_SIZE, TIC_SPRITESHEET_SIZE};
+    //tic_rect rect = {x, y, TIC_SPRITESHEET_SIZE, TIC_SPRITESHEET_SIZE};
+    tic_rect rect = MapSheetRect;
 
     tic_api_rectb(map->tic, rect.x - 1, rect.y - 1, rect.w + 2, rect.h + 2, tic_color_12);
-
+	
     {
         s32 bx = map->sheet.rect.x * TIC_SPRITESIZE - 1 + x;
         s32 by = map->sheet.rect.y * TIC_SPRITESIZE - 1 + y;
@@ -377,18 +381,44 @@ static void drawSheetOvr(Map* map, s32 x, s32 y)
 
         tic_api_rectb(map->tic, bx, by, bw, bh, tic_color_12);
     }
+	
 }
 
 static void drawSheetReg(Map* map, s32 x, s32 y) // draw spritesheet
 {
     if(!sheetVisible(map))return;
 
-    tic_rect rect = {x, y, TIC_SPRITESHEET_SIZE, TIC_SPRITESHEET_SIZE};
+    //tic_rect rect = {x, y, TIC_SPRITESHEET_SIZE, TIC_SPRITESHEET_SIZE};
+    tic_rect rect = MapSheetRect;
+	
+	//tic_api_rect(map->tic, MapSheetRect.x-1, 0, MapSheetRect.w+2, MapSheetRect.y, tic_color_14);
+	tic_api_rect(map->tic, MapSheetRect.x-4, 0, MapSheetRect.w+5, MapSheetRect.h+MapSheetRect.y+4, tic_color_14);
+	
+	for (s32 i = 0; i < 8; i++) // draw paginator
+	{
+		//static char Label[] = "SWITCH PAGE";
+		tic_rect rectp = { MapSheetRect.x-1 + i * 8, MapSheetRect.y - 9, 7,7 };
+		bool over = false;
+		if (checkMousePos(&rectp))
+		{
+			setCursor(tic_cursor_hand);
+			over = true;
+			//showTooltip("SWITCH PAGE [Tab]");
+			//tic_api_print(tic, Label + (char[]) {i,'/0'}, 20, 0, tic_color_12, false, 1, false);
+			if (checkMouseClick(&rectp, tic_mouse_left))
+			{
+				//sprite->index = TIC_PAGE_SPRITES * i;
+				map->page = i;
+			}
+		}
+		tic_api_rect(map->tic, rectp.x, rectp.y, rectp.w, rectp.h, tic_color_15);
+		tic_api_rect(map->tic, rectp.x + 1, rectp.y + 1, rectp.w - 2, rectp.h - 2, i == map->page ? tic_color_12 : over ? tic_color_2 : tic_color_15);
+	}
 
     if(checkMousePos(&rect))
     {
         setCursor(tic_cursor_hand);
-
+		
         if(checkMouseDown(&rect, tic_mouse_left))
         {
             s32 mx = getMouseX() - rect.x;
@@ -962,7 +992,8 @@ static void copySelectionToClipboard(Map* map) //doesnt work with 256-2047 index
             buffer[0] = sel->w;
             buffer[1] = sel->h;
 
-            u8* ptr = buffer + 2;
+            //u8* ptr = buffer + 2;
+            u16* ptr = buffer + 2;
 
             for(s32 j = sel->y; j < sel->y+sel->h; j++)
                 for(s32 i = sel->x; i < sel->x+sel->w; i++)
@@ -1070,7 +1101,7 @@ static void processKeyboard(Map* map)
         else if(keyWasPressed(tic_key_2)) map->mode = MAP_DRAG_MODE;
         else if(keyWasPressed(tic_key_3)) map->mode = MAP_SELECT_MODE;
         else if(keyWasPressed(tic_key_4)) map->mode = MAP_FILL_MODE;
-		else if(keyWasPressed(tic_key_equals)) {if (map->page < 8) map->page += 1;}
+		else if(keyWasPressed(tic_key_equals)) {if (map->page < 7) map->page += 1;}
 		else if(keyWasPressed(tic_key_minus)) {if (map->page > 0) map->page -=1;}
         else if(keyWasPressed(tic_key_delete)) deleteSelection(map);
         else if(keyWasPressed(tic_key_grave)) map->canvas.grid = !map->canvas.grid;
@@ -1137,6 +1168,7 @@ static void overline(tic_mem* tic, void* data)
         tic_api_line(tic, TIC80_WIDTH - screenScrollX, 0, TIC80_WIDTH - screenScrollX, TIC80_HEIGHT, tic_color_14);
     }
     tic_api_clip(tic, 0, 0, TIC80_WIDTH, TIC80_HEIGHT);
+
 
     drawSheetOvr(map, BLOB89_MAPSHEETX, BLOB89_MAPSHEETY); // draw white border of tileset
 

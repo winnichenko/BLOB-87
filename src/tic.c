@@ -1179,7 +1179,7 @@ u16 tic_api_mget(tic_mem* memory, const tic_map* src, s32 x, s32 y)
 {
     if(x < 0 || x >= TIC_MAP_WIDTH || y < 0 || y >= TIC_MAP_HEIGHT) return 0;
     
-    return (CLAMP(*(src->data + y * TIC_MAP_WIDTH + x),0,2047));
+    return (CLAMP(*(src->data + y * TIC_MAP_WIDTH + x),0,2047)); // clamping for safety
 }
 
 static inline void setLinePixel(tic_mem* tic, s32 x, s32 y, u8 color)
