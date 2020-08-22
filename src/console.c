@@ -1599,7 +1599,7 @@ static void onImportCover(const char* name, const void* buffer, size_t size, voi
                     }
                     else printError(console, "\ncover image too big :(");
                 }
-                else printError(console, "\ncover image must be 240x136 :(");
+                else printError(console, "\ncover image must be 256x224 :(");
 
                 gif_close(image);
             }
