@@ -34,7 +34,7 @@ struct Map
     
     s32 tickCounter;
 
-	u8 page;
+	u8 page; //spritesheet page 8x256 sprites
 
     enum
     {
@@ -78,7 +78,7 @@ struct Map
         bool drag;
     } select;
 
-    u8* paste;
+    u16* paste;
 
     struct History* history;
 

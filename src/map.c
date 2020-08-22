@@ -24,6 +24,8 @@
 #include "history.h"
 
 #define SHEET_COLS (TIC_SPRITESHEET_SIZE / TIC_SPRITESIZE)
+#define BLOB89_MAPSHEETX (TIC80_WIDTH - TIC_SPRITESHEET_SIZE - 1)
+#define BLOB89_MAPSHEETY (16)
 
 #define MAP_WIDTH (TIC80_WIDTH)
 #define MAP_HEIGHT (TIC80_HEIGHT - TOOLBAR_SIZE)
@@ -331,6 +333,7 @@ static void drawTileIndex(Map* map, s32 x, s32 y) //draw tile index on a toolbar
         tic_api_print(map->tic, buf, x, y, tic_color_13, true, 1, false);
     }
 }
+
 static void drawTilePageNum(Map* map, s32 x, s32 y) //draw tile index on a toolbar
 {
 	s32 index = -1;
@@ -340,11 +343,12 @@ static void drawTilePageNum(Map* map, s32 x, s32 y) //draw tile index on a toolb
 	tic_api_print(map->tic, buf, x, y, tic_color_14, true, 1, false);
 
 }
+
 static void drawMapToolbar(Map* map, s32 x, s32 y)
 {
     tic_api_rect(map->tic, 0, 0, TIC80_WIDTH, TOOLBAR_SIZE, tic_color_12);
 
-    drawTileIndex(map, TIC80_WIDTH/2 - TIC_FONT_WIDTH-3, y);
+    drawTileIndex(map, TIC80_WIDTH/2 - TIC_FONT_WIDTH*3, y);
 	drawTilePageNum(map, TIC80_WIDTH-72,y);
 
     x = drawSheetButton(map, x, 0);
@@ -447,8 +451,8 @@ static void drawCursorPos(Map* map, s32 x, s32 y)
 
 static void setMapSprite(Map* map, s32 x, s32 y) //put sprite on map
 {
-    s32 mx = map->sheet.rect.x;
-    s32 my = map->sheet.rect.y;
+    s32 mx = map->sheet.rect.x; //it just stores the rect but not the real indexes. so changing the page also changing indexes to draw with  
+    s32 my = map->sheet.rect.y; // might be better to work with absolute index. TODO?
 
     for(s32 j = 0; j < map->sheet.rect.h; j++)
         for(s32 i = 0; i < map->sheet.rect.w; i++)
@@ -602,12 +606,12 @@ static void drawSelectionRect(Map* map, s32 x, s32 y, s32 w, s32 h)
     for(s32 i = (y+h-1); i >= y; i--)   {tic_api_pix(map->tic, x, i, index++ % Step ? color : 0, false);}
 }
 
-static void drawPasteData(Map* map)
+static void drawPasteData(Map* map) // doesnt work with 256-2047 tiles. it stores rect in 0-255 coords, not indexes
 {
     s32 w = map->paste[0];
     s32 h = map->paste[1];
 
-    u8* data = map->paste + 2;
+    u16* data = map->paste + 2;
 
     s32 mx = getMouseX() + map->scroll.x - (w - 1)*TIC_SPRITESIZE / 2;
     s32 my = getMouseY() + map->scroll.y - (h - 1)*TIC_SPRITESIZE / 2;
@@ -768,7 +772,7 @@ static bool pop(FillStack* stack, s32* x, s32* y)
     return false;
 }
 
-static void fillMap(Map* map, s32 x, s32 y, u8 tile)
+static void fillMap(Map* map, s32 x, s32 y, u16 tile) //doest work with 256-2047 tiles
 {
     if(tile == (map->sheet.rect.x + map->sheet.rect.y * SHEET_COLS)) return;
 
@@ -912,10 +916,6 @@ static void drawMapReg(Map* map)
 	tic_api_map(tic, map->src, getBankTiles(), map->scroll.x / TIC_SPRITESIZE, map->scroll.y / TIC_SPRITESIZE, 
         TIC_MAP_SCREEN_WIDTH + 1, TIC_MAP_SCREEN_HEIGHT + 1, -scrollX, -scrollY, -1, 1, NULL, NULL);
 	
-	/*
-	tic_api_map(tic, map->src, &tic->ram.tiles, map->scroll.x / TIC_SPRITESIZE, map->scroll.y / TIC_SPRITESIZE, 
-        TIC_MAP_SCREEN_WIDTH + 1, TIC_MAP_SCREEN_HEIGHT + 1, -scrollX, -scrollY, -1, 1, NULL, NULL);
-	*/
 	
     if(map->canvas.grid || map->scroll.active)
         drawGrid(map);
@@ -948,14 +948,14 @@ static void redo(Map* map)
     history_redo(map->history);
 }
 
-static void copySelectionToClipboard(Map* map)
+static void copySelectionToClipboard(Map* map) //doesnt work with 256-2047 indexes 
 {
     tic_rect* sel = &map->select.rect;
 
     if(sel->w > 0 && sel->h > 0)
     {   
         s32 size = sel->w * sel->h + 2;
-        u8* buffer = malloc(size);
+        u16* buffer = malloc(size);
 
         if(buffer)
         {
@@ -1025,7 +1025,7 @@ static void copyFromClipboard(Map* map)
 
             if(size > 2)
             {
-                u8* data = malloc(size);
+                u16* data = malloc(size);
 
                 str2buf(clipboard, strlen(clipboard), data, true);
 
@@ -1101,7 +1101,8 @@ static void tick(Map* map)
     processKeyboard(map);
 
     drawMapReg(map); //draw map field
-    drawSheetReg(map, TIC80_WIDTH - TIC_SPRITESHEET_SIZE - 1, TOOLBAR_SIZE); // draw spritesheet
+    //drawSheetReg(map, TIC80_WIDTH - TIC_SPRITESHEET_SIZE - 1, TOOLBAR_SIZE+8); // draw spritesheet
+    drawSheetReg(map, BLOB89_MAPSHEETX,BLOB89_MAPSHEETY); // draw spritesheet
 }
 
 static void onStudioEvent(Map* map, StudioEvent event)
@@ -1137,7 +1138,7 @@ static void overline(tic_mem* tic, void* data)
     }
     tic_api_clip(tic, 0, 0, TIC80_WIDTH, TIC80_HEIGHT);
 
-    drawSheetOvr(map, TIC80_WIDTH - TIC_SPRITESHEET_SIZE - 1, TOOLBAR_SIZE); // draw white border of tileset
+    drawSheetOvr(map, BLOB89_MAPSHEETX, BLOB89_MAPSHEETY); // draw white border of tileset
 
     {
         tic_rect rect = {MAP_X, MAP_Y, MAP_WIDTH, MAP_HEIGHT};

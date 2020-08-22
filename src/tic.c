@@ -1169,7 +1169,8 @@ void tic_api_map(tic_mem* memory, const tic_map* src, const tic_tiles* tiles, s3
 
 void tic_api_mset(tic_mem* memory, tic_map* src, s32 x, s32 y, u16 value)
 {
-    if(x < 0 || x >= TIC_MAP_WIDTH || y < 0 || y >= TIC_MAP_HEIGHT) return;
+	value = CLAMP(value, 0, 2047); //safety measure
+	if(x < 0 || x >= TIC_MAP_WIDTH || y < 0 || y >= TIC_MAP_HEIGHT) return;
 
     *(src->data + y * TIC_MAP_WIDTH + x) = value;
 }
@@ -1178,7 +1179,7 @@ u16 tic_api_mget(tic_mem* memory, const tic_map* src, s32 x, s32 y)
 {
     if(x < 0 || x >= TIC_MAP_WIDTH || y < 0 || y >= TIC_MAP_HEIGHT) return 0;
     
-    return *(src->data + y * TIC_MAP_WIDTH + x);
+    return (CLAMP(*(src->data + y * TIC_MAP_WIDTH + x),0,2047));
 }
 
 static inline void setLinePixel(tic_mem* tic, s32 x, s32 y, u8 color)
