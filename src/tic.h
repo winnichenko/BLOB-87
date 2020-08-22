@@ -89,7 +89,8 @@
 #define TIC_CODE_SIZE (128 * 1024) // 64 * 1024
 
 #define TIC_BANK_BITS 3
-#define TIC_BANKS (1 << TIC_BANK_BITS)
+//#define TIC_BANKS (1 << TIC_BANK_BITS)
+#define TIC_BANKS 1
 #define TIC_GAMEPADS (sizeof(tic80_gamepads) / sizeof(tic80_gamepad))
 
 #define SFX_NOTES {"C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-"}

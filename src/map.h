@@ -34,6 +34,8 @@ struct Map
     
     s32 tickCounter;
 
+	u8 page;
+
     enum
     {
         MAP_DRAW_MODE = 0,

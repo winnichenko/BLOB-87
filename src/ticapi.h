@@ -24,7 +24,7 @@
 
 #include "tic.h"
 
-typedef struct { u8 index; tic_flip flip; tic_rotate rotate; } RemapResult;
+typedef struct { u16 index; tic_flip flip; tic_rotate rotate; } RemapResult;
 typedef void(*RemapFunc)(void*, s32 x, s32 y, RemapResult* result);
 
 typedef void(*TraceOutput)(void*, const char*, u8 color);
@@ -103,8 +103,8 @@ typedef struct
     macro(btnp,         3,  u32,    tic_mem*, s32 id, s32 hold, s32 period) \
     macro(sfx,          6,  void,   tic_mem*, s32 index, s32 note, s32 octave, s32 duration, s32 channel, s32 volume, s32 speed) \
     macro(map,          9,  void,   tic_mem*, const tic_map* src, const tic_tiles* tiles, s32 x, s32 y, s32 width, s32 height, s32 sx, s32 sy, u8 chromakey, s32 scale, RemapFunc remap, void* data) \
-    macro(mget,         2,  u8,     tic_mem*, const tic_map* src, s32 x, s32 y) \
-    macro(mset,         3,  void,   tic_mem*, tic_map* src, s32 x, s32 y, u8 value) \
+    macro(mget,         2,  u16,    tic_mem*, const tic_map* src, s32 x, s32 y) \
+    macro(mset,         3,  void,   tic_mem*, tic_map* src, s32 x, s32 y, u16 value) \
     macro(peek,         1,  u8,     tic_mem*, s32 address) \
     macro(poke,         2,  void,   tic_mem*, s32 address, u8 value) \
     macro(peek4,        1,  u8,     tic_mem*, s32 address) \

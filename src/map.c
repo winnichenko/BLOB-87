@@ -293,7 +293,7 @@ static s32 drawPenButton(Map* map, s32 x, s32 y)
     return drawToolButton(map, x, y, Icon, ICON_SIZE, "DRAW [1]", MAP_DRAW_MODE);
 }
 
-static void drawTileIndex(Map* map, s32 x, s32 y)
+static void drawTileIndex(Map* map, s32 x, s32 y) //draw tile index on a toolbar
 {
     s32 index = -1;
 
@@ -309,7 +309,7 @@ static void drawTileIndex(Map* map, s32 x, s32 y)
             mx /= TIC_SPRITESIZE;
             my /= TIC_SPRITESIZE;
 
-            index = mx + my * SHEET_COLS;
+            index = (mx + my * SHEET_COLS)+TIC_PAGE_SPRITES*map->page;
         }
     }
     else
@@ -331,12 +331,21 @@ static void drawTileIndex(Map* map, s32 x, s32 y)
         tic_api_print(map->tic, buf, x, y, tic_color_13, true, 1, false);
     }
 }
+static void drawTilePageNum(Map* map, s32 x, s32 y) //draw tile index on a toolbar
+{
+	s32 index = -1;
+	char buf[] = "P9"; 
+	sprintf(buf, "P%i", map->page);
 
+	tic_api_print(map->tic, buf, x, y, tic_color_14, true, 1, false);
+
+}
 static void drawMapToolbar(Map* map, s32 x, s32 y)
 {
     tic_api_rect(map->tic, 0, 0, TIC80_WIDTH, TOOLBAR_SIZE, tic_color_12);
 
-    drawTileIndex(map, TIC80_WIDTH/2 - TIC_FONT_WIDTH, y);
+    drawTileIndex(map, TIC80_WIDTH/2 - TIC_FONT_WIDTH-3, y);
+	drawTilePageNum(map, TIC80_WIDTH-72,y);
 
     x = drawSheetButton(map, x, 0);
     x = drawFillButton(map, x, 0);
@@ -412,7 +421,7 @@ static void drawSheetReg(Map* map, s32 x, s32 y) // draw spritesheet
 
     for(s32 j = 0, index = 0; j < rect.h; j += TIC_SPRITESIZE)
         for(s32 i = 0; i < rect.w; i += TIC_SPRITESIZE, index++)
-            tic_api_spr(map->tic, getBankTiles(), index, x + i, y + j, 1, 1, NULL, 0, 1, tic_no_flip, tic_no_rotate);
+            tic_api_spr(map->tic, getBankTiles(), index+TIC_PAGE_SPRITES*map->page, x + i, y + j, 1, 1, NULL, 0, 1, tic_no_flip, tic_no_rotate);
 }
 
 static void drawCursorPos(Map* map, s32 x, s32 y)
@@ -443,7 +452,7 @@ static void setMapSprite(Map* map, s32 x, s32 y) //put sprite on map
 
     for(s32 j = 0; j < map->sheet.rect.h; j++)
         for(s32 i = 0; i < map->sheet.rect.w; i++)
-            tic_api_mset(map->tic, map->src, (x+i)%TIC_MAP_WIDTH, (y+j)%TIC_MAP_HEIGHT, (mx+i) + (my+j) * SHEET_COLS);
+            tic_api_mset(map->tic, map->src, (x+i)%TIC_MAP_WIDTH, (y+j)%TIC_MAP_HEIGHT, ((mx+i) + (my+j) * SHEET_COLS)+TIC_PAGE_SPRITES*map->page);
 
     history_add(map->history);
 }
@@ -477,7 +486,7 @@ static void drawTileCursor(Map* map) //draw tile under the cursor
 
 		for (s32 j = 0, ty = pos.y; j < map->sheet.rect.h; j++, ty += TIC_SPRITESIZE)
 			for (s32 i = 0, tx = pos.x; i < map->sheet.rect.w; i++, tx += TIC_SPRITESIZE)
-                tic_api_spr(map->tic, getBankTiles(), (sx+i) + (sy+j) * SHEET_COLS, tx, ty, 1, 1, NULL, 0, 1, tic_no_flip, tic_no_rotate);
+                tic_api_spr(map->tic, getBankTiles(), ((sx+i) + (sy+j) * SHEET_COLS)+TIC_PAGE_SPRITES*map->page, tx, ty, 1, 1, NULL, 0, 1, tic_no_flip, tic_no_rotate);
     }
 }
 
@@ -899,9 +908,15 @@ static void drawMapReg(Map* map)
     s32 scrollY = map->scroll.y % TIC_SPRITESIZE;
 
     tic_mem* tic = map->tic;
-    tic_api_map(tic, map->src, getBankTiles(), map->scroll.x / TIC_SPRITESIZE, map->scroll.y / TIC_SPRITESIZE, 
+    
+	tic_api_map(tic, map->src, getBankTiles(), map->scroll.x / TIC_SPRITESIZE, map->scroll.y / TIC_SPRITESIZE, 
         TIC_MAP_SCREEN_WIDTH + 1, TIC_MAP_SCREEN_HEIGHT + 1, -scrollX, -scrollY, -1, 1, NULL, NULL);
-
+	
+	/*
+	tic_api_map(tic, map->src, &tic->ram.tiles, map->scroll.x / TIC_SPRITESIZE, map->scroll.y / TIC_SPRITESIZE, 
+        TIC_MAP_SCREEN_WIDTH + 1, TIC_MAP_SCREEN_HEIGHT + 1, -scrollX, -scrollY, -1, 1, NULL, NULL);
+	*/
+	
     if(map->canvas.grid || map->scroll.active)
         drawGrid(map);
 
@@ -1055,6 +1070,8 @@ static void processKeyboard(Map* map)
         else if(keyWasPressed(tic_key_2)) map->mode = MAP_DRAG_MODE;
         else if(keyWasPressed(tic_key_3)) map->mode = MAP_SELECT_MODE;
         else if(keyWasPressed(tic_key_4)) map->mode = MAP_FILL_MODE;
+		else if(keyWasPressed(tic_key_equals)) {if (map->page < 8) map->page += 1;}
+		else if(keyWasPressed(tic_key_minus)) {if (map->page > 0) map->page -=1;}
         else if(keyWasPressed(tic_key_delete)) deleteSelection(map);
         else if(keyWasPressed(tic_key_grave)) map->canvas.grid = !map->canvas.grid;
     }
@@ -1155,6 +1172,7 @@ void initMap(Map* map, tic_mem* tic, tic_map* src)
         .tic = tic,
         .tick = tick,
         .src = src,
+		.page = 0,
         .mode = MAP_DRAW_MODE,
         .canvas = 
         {

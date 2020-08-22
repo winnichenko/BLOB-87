@@ -503,7 +503,7 @@ static s32 lua_mget(lua_State* lua)
 
         tic_mem* tic = (tic_mem*)getLuaMachine(lua);
 
-        u8 value = tic_api_mget(tic, &tic->ram.map, x, y);
+        u16 value = tic_api_mget(tic, &tic->ram.map, x, y);
         lua_pushinteger(lua, value);
         return 1;
     }
@@ -520,13 +520,13 @@ static s32 lua_mset(lua_State* lua)
     {
         s32 x = getLuaNumber(lua, 1);
         s32 y = getLuaNumber(lua, 2);
-        u8 val = getLuaNumber(lua, 3);
+        u16 val = getLuaNumber(lua, 3);
 
         tic_mem* tic = (tic_mem*)getLuaMachine(lua);
 
         tic_api_mset(tic, &tic->ram.map, x, y, val);
     }
-    else luaL_error(lua, "invalid params, mget(x,y)\n");
+    else luaL_error(lua, "invalid params, mset(x,y)\n");
 
     return 0;
 }
@@ -614,7 +614,8 @@ static s32 lua_map(lua_State* lua)
 
     tic_mem* tic = (tic_mem*)getLuaMachine(lua);
 
-    tic_api_map((tic_mem*)getLuaMachine(lua), &tic->ram.map, &tic->ram.tiles, x, y, w, h, sx, sy, chromakey, scale, NULL, NULL);
+    //tic_api_map((tic_mem*)getLuaMachine(lua), &tic->ram.map, &tic->ram.tiles, x, y, w, h, sx, sy, chromakey, scale, NULL, NULL);
+    tic_api_map(tic, &tic->ram.map, &tic->ram.tiles, x, y, w, h, sx, sy, chromakey, scale, NULL, NULL);
 
     return 0;
 }

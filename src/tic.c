@@ -371,6 +371,7 @@ static void drawTile(tic_machine* machine, const tic_tile* buffer, s32 x, s32 y,
 #undef INDEX_XY
 
 static void drawMap(tic_machine* machine, const tic_map* src, const tic_tiles* tiles, s32 x, s32 y, s32 width, s32 height, s32 sx, s32 sy, u8 chromakey, s32 scale, RemapFunc remap, void* data)
+//static void drawMap(tic_mem* machine, const tic_map* src, const tic_tiles* tiles, s32 x, s32 y, s32 width, s32 height, s32 sx, s32 sy, u8 chromakey, s32 scale, RemapFunc remap, void* data)
 {
     const s32 size = TIC_SPRITESIZE * scale;
 
@@ -391,7 +392,8 @@ static void drawMap(tic_machine* machine, const tic_map* src, const tic_tiles* t
             if (remap)
                 remap(data, mi, mj, &tile);
 
-            drawTile(machine, tiles->data + tile.index, ii, jj, &chromakey, 1, scale, tile.flip, tile.rotate);
+           drawTile(machine, tiles->data + tile.index, ii, jj, &chromakey, 1, scale, tile.flip, tile.rotate);
+            //drawTile((tic_machine*)machine, tiles->data + index, ii, jj, &chromakey, 1, scale, tile.flip, tile.rotate);
         }
 }
 
@@ -1162,16 +1164,17 @@ void tic_api_textri(tic_mem* memory, float x1, float y1, float x2, float y2, flo
 void tic_api_map(tic_mem* memory, const tic_map* src, const tic_tiles* tiles, s32 x, s32 y, s32 width, s32 height, s32 sx, s32 sy, u8 chromakey, s32 scale, RemapFunc remap, void* data)
 {
     drawMap((tic_machine*)memory, src, tiles, x, y, width, height, sx, sy, chromakey, scale, remap, data);
+    //drawMap(memory, src, tiles, x, y, width, height, sx, sy, chromakey, scale, remap, data);
 }
 
-void tic_api_mset(tic_mem* memory, tic_map* src, s32 x, s32 y, u8 value)
+void tic_api_mset(tic_mem* memory, tic_map* src, s32 x, s32 y, u16 value)
 {
     if(x < 0 || x >= TIC_MAP_WIDTH || y < 0 || y >= TIC_MAP_HEIGHT) return;
 
     *(src->data + y * TIC_MAP_WIDTH + x) = value;
 }
 
-u8 tic_api_mget(tic_mem* memory, const tic_map* src, s32 x, s32 y)
+u16 tic_api_mget(tic_mem* memory, const tic_map* src, s32 x, s32 y)
 {
     if(x < 0 || x >= TIC_MAP_WIDTH || y < 0 || y >= TIC_MAP_HEIGHT) return 0;
     
