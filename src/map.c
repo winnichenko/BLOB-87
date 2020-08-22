@@ -366,7 +366,7 @@ static void drawSheetOvr(Map* map, s32 x, s32 y)
     }
 }
 
-static void drawSheetReg(Map* map, s32 x, s32 y)
+static void drawSheetReg(Map* map, s32 x, s32 y) // draw spritesheet
 {
     if(!sheetVisible(map))return;
 
@@ -1083,8 +1083,8 @@ static void tick(Map* map)
 
     processKeyboard(map);
 
-    drawMapReg(map);
-    drawSheetReg(map, TIC80_WIDTH - TIC_SPRITESHEET_SIZE - 1, TOOLBAR_SIZE);
+    drawMapReg(map); //draw map field
+    drawSheetReg(map, TIC80_WIDTH - TIC_SPRITESHEET_SIZE - 1, TOOLBAR_SIZE); // draw spritesheet
 }
 
 static void onStudioEvent(Map* map, StudioEvent event)
@@ -1120,7 +1120,7 @@ static void overline(tic_mem* tic, void* data)
     }
     tic_api_clip(tic, 0, 0, TIC80_WIDTH, TIC80_HEIGHT);
 
-    drawSheetOvr(map, TIC80_WIDTH - TIC_SPRITESHEET_SIZE - 1, TOOLBAR_SIZE);
+    drawSheetOvr(map, TIC80_WIDTH - TIC_SPRITESHEET_SIZE - 1, TOOLBAR_SIZE); // draw white border of tileset
 
     {
         tic_rect rect = {MAP_X, MAP_Y, MAP_WIDTH, MAP_HEIGHT};

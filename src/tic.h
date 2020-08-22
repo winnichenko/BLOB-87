@@ -342,7 +342,8 @@ typedef struct
 
 typedef struct
 {
-    u8 data[TIC_MAP_WIDTH * TIC_MAP_HEIGHT];
+    //u8 data[TIC_MAP_WIDTH * TIC_MAP_HEIGHT];
+    u16 data[TIC_MAP_WIDTH * TIC_MAP_HEIGHT];
 } tic_map;
 
 typedef struct

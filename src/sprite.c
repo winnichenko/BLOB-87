@@ -67,6 +67,19 @@ static void setSheetPixel(Sprite* sprite, s32 x, s32 y, u8 color)
     setSpritePixel(sprite->src->data, x,  y + TIC_SPRITESHEET_SIZE*(sprite->index / TIC_PAGE_SPRITES), color);
 }
 
+static void setSheetLine(Sprite* sprite, s32 x1, s32 y1, s32 x2, s32 y2, u8 color)
+{
+	u32 dx = x2 - x1;
+	u32 dy = y2 - y1;
+	if (dx != 0) {
+		for (s32 x = x1; x < x2; x++)
+		{
+			s32 y = y1 + dy * (x - x1) / dx;
+			setSheetPixel(sprite, x, y, color);
+		}
+	}
+}
+
 static s32 getIndexPosX(Sprite* sprite)
 {
     //s32 index = sprite->index % TIC_BANK_SPRITES;
@@ -1670,58 +1683,39 @@ static void drawSpriteToolbar(Sprite* sprite)
         tic_api_rect(tic, rect.x+1 + val*6, 2, 3, 3, tic_color_12);
     }
 
-	/*
-	for (s32 i = 0; i < TIC_EDITOR_BANKS; i++)
+	
+	for (s32 i = 0; i <TIC_BANK_SPRITES*2/TIC_PAGE_SPRITES; i++)
 	{
-		tic_rect rect = { x + 2 + (i + 1)*Size, 0, Size, Size };
+		static char Label[] = "SWITCH PAGE";
+		tic_rect rect = { SheetX - 1 + i*8, SheetY-9, 7,7 };
 		bool over = false;
 		if (checkMousePos(&rect))
 		{
 			setCursor(tic_cursor_hand);
 			over = true;
+			showTooltip("SWITCH PAGE [Tab]");
+			//tic_api_print(tic, Label + (char[]) {i,'/0'}, 20, 0, tic_color_12, false, 1, false);
 			if (checkMouseClick(&rect, tic_mouse_left))
 			{
-				if (impl.bank.chained)
-					memset(impl.bank.indexes, i, sizeof impl.bank.indexes);
-				else impl.bank.indexes[mode] = i;
+				sprite->index = TIC_PAGE_SPRITES * i;
+				//if (impl.bank.chained)
+				//	memset(impl.bank.indexes, i, sizeof impl.bank.indexes);
+				//else impl.bank.indexes[mode] = i;
 			}
 		}
-		if (i == impl.bank.indexes[mode])
-			tic_api_rect(tic, rect.x, rect.y, rect.w, rect.h, tic_color_2);
-		tic_api_print(tic, (char[]) { '0' + i, '\0' }, rect.x + 1, rect.y + 1, i == impl.bank.indexes[mode] ? tic_color_12 : over ? tic_color_2 : tic_color_13, false, 1, false);
+		//if (i == sprite->index/TIC_PAGE_SPRITES)
+		//	tic_api_rect(tic, rect.x, rect.y, rect.w, rect.h, tic_color_2);
+		//tic_api_print(tic, (char[]) { '0' + i, '\0' }, rect.x + 1, rect.y + 1, i == sprite->index/TIC_PAGE_SPRITES ? tic_color_12 : over ? tic_color_2 : tic_color_13, false, 1, false);
+		tic_api_rect(tic, rect.x, rect.y, rect.w, rect.h, tic_color_15);
+		tic_api_rect(tic, rect.x+1, rect.y+1, rect.w-2, rect.h-2, i == sprite->index / TIC_PAGE_SPRITES ? tic_color_12 : over ? tic_color_2: tic_color_15);
 	}
-	*/
-
-	{
-		static const char Label[] = "12345678";
-		char pg = 0;
-		for (s32 i = 0; i < 8; i++)
-		{
-			tic_rect rect = { SheetX+i*8, SheetY - 8, TIC_FONT_WIDTH + 1, TIC_SPRITESIZE - 1 };
-			tic_api_rect(tic, rect.x, rect.y, rect.w, rect.h, tic_color_0);
-			//tic_api_print(tic, Label, rect.x + 1, rect.y + 1, tic_color_12, true, 1, false);
-
-			if (checkMousePos(&rect))
-			{
-				setCursor(tic_cursor_hand);
-
-				showTooltip("PAGES");
-
-				if (checkMouseClick(&rect, tic_mouse_left))
-				{
-					tic_api_rect(tic, (rect.x + 1)+i*8, rect.y + 1, rect.w - 1, rect.h - 1, tic_color_14);
-					//sprite->index -= TIC_BANK_SPRITES;
-					//clearCanvasSelection(sprite);
-				}
-			}
-		}
-	}
-
+	
+	
 	//bool bg = sprite->index < TIC_SPRITESHEET_SIZE % TIC_PAGE_SPRITES;//TIC_BANK_SPRITES;
 	u16 idx = sprite->index;
     {
 		static const char Label[] = "<<";// "BG";
-        tic_rect rect = {TIC80_WIDTH - 2 * TIC_FONT_WIDTH - 2, 0, 2 * TIC_FONT_WIDTH + 1, TIC_SPRITESIZE-1};
+        tic_rect rect = {TIC80_WIDTH - 4 * TIC_FONT_WIDTH - 4, 0, 2 * TIC_FONT_WIDTH + 1, TIC_SPRITESIZE-1};
         //tic_api_rect(tic, rect.x, rect.y, rect.w, rect.h, bg ? tic_color_0 : tic_color_14);
         tic_api_rect(tic, rect.x, rect.y, rect.w, rect.h, tic_color_14);
         tic_api_print(tic, Label, rect.x+1, rect.y+1, tic_color_12, true, 1, false);
@@ -1730,7 +1724,7 @@ static void drawSpriteToolbar(Sprite* sprite)
         {
             setCursor(tic_cursor_hand);
 
-            showTooltip("TILES [tab]");
+            showTooltip("PREVIOUS PAGE");
 
             if((idx > TIC_PAGE_SPRITES) && checkMouseClick(&rect, tic_mouse_left))
             {
@@ -1742,7 +1736,7 @@ static void drawSpriteToolbar(Sprite* sprite)
 
     {
 		static const char Label[] = ">>";//"FG";
-        tic_rect rect = {TIC80_WIDTH - 4 * TIC_FONT_WIDTH - 4, 0, 2 * TIC_FONT_WIDTH + 1, TIC_SPRITESIZE-1};
+        tic_rect rect = {TIC80_WIDTH - 2 * TIC_FONT_WIDTH - 2, 0, 2 * TIC_FONT_WIDTH + 1, TIC_SPRITESIZE-1};
         //tic_api_rect(tic, rect.x, rect.y, rect.w, rect.h, bg ? tic_color_14 : tic_color_0);
         tic_api_rect(tic, rect.x, rect.y, rect.w, rect.h, tic_color_14);
         tic_api_print(tic, Label, rect.x+1, rect.y+1, tic_color_12, true, 1, false);
@@ -1751,7 +1745,7 @@ static void drawSpriteToolbar(Sprite* sprite)
         {
             setCursor(tic_cursor_hand);
 
-            showTooltip("SPRITES [tab]");
+            showTooltip("NEXT PAGE");
 
             if((idx < (TIC_BANK_SPRITES*TIC_SPRITE_BANKS-TIC_PAGE_SPRITES))&& checkMouseClick(&rect, tic_mouse_left))
             {
