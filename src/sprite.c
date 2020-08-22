@@ -55,12 +55,16 @@ static void clearCanvasSelection(Sprite* sprite)
 
 static u8 getSheetPixel(Sprite* sprite, s32 x, s32 y)
 {
-    return getSpritePixel(sprite->src->data, x, sprite->index >= TIC_BANK_SPRITES ? y + TIC_SPRITESHEET_SIZE: y);
+    //return getSpritePixel(sprite->src->data, x, sprite->index >= TIC_BANK_SPRITES ? y + TIC_SPRITESHEET_SIZE: y);
+    //return getSpritePixel(sprite->src->data, x, sprite->index >= TIC_PAGE_SPRITES ? y + TIC_SPRITESHEET_SIZE: y);
+    return getSpritePixel(sprite->src->data, x, y + TIC_SPRITESHEET_SIZE*(sprite->index / TIC_PAGE_SPRITES));
 }
 
 static void setSheetPixel(Sprite* sprite, s32 x, s32 y, u8 color)
 {
-    setSpritePixel(sprite->src->data, x, sprite->index >= TIC_BANK_SPRITES ? y + TIC_SPRITESHEET_SIZE: y, color);
+    //setSpritePixel(sprite->src->data, x, sprite->index >= TIC_BANK_SPRITES ? y + TIC_SPRITESHEET_SIZE: y, color);
+    //setSpritePixel(sprite->src->data, x, sprite->index >= TIC_PAGE_SPRITES ? y + TIC_SPRITESHEET_SIZE: y, color);
+    setSpritePixel(sprite->src->data, x,  y + TIC_SPRITESHEET_SIZE*(sprite->index / TIC_PAGE_SPRITES), color);
 }
 
 static s32 getIndexPosX(Sprite* sprite)
@@ -69,6 +73,7 @@ static s32 getIndexPosX(Sprite* sprite)
     s32 index = sprite->index % TIC_PAGE_SPRITES;
     //s32 index = sprite->index % TIC_BANK_SPRITES*TIC_SPRITE_BANKS - sprite->index % TIC_PAGE_SPRITES;
     return index % SHEET_COLS * TIC_SPRITESIZE;
+    //return index % SHEET_COLS;
 }
 
 static s32 getIndexPosY(Sprite* sprite)
@@ -77,6 +82,7 @@ static s32 getIndexPosY(Sprite* sprite)
     s32 index = sprite->index % TIC_PAGE_SPRITES;
     //s32 index = sprite->index % TIC_BANK_SPRITES*TIC_SPRITE_BANKS - sprite->index % TIC_PAGE_SPRITES;
     return index / SHEET_COLS * TIC_SPRITESIZE;
+    //return index / SHEET_COLS;
 }
 
 static void drawSelection(Sprite* sprite, s32 x, s32 y, s32 w, s32 h) // draw selection inside sprite canvas
