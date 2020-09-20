@@ -74,6 +74,7 @@ struct Code
         TEXT_FIND_MODE,
         TEXT_GOTO_MODE,
         TEXT_OUTLINE_MODE,
+		TEXT_ASCII_MODE,
     } mode;
 
     struct

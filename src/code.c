@@ -67,12 +67,13 @@ static void drawBookmarks(Code* code)
 
 static inline s32 getFontWidth(Code* code)
 {
-    return code->altFont ? TIC_ALTFONT_WIDTH : TIC_FONT_WIDTH;
+    //return code->altFont ? TIC_ALTFONT_WIDTH : TIC_FONT_WIDTH;
+    return TIC_FONT_WIDTH;
 }
 
-static inline void drawChar(tic_mem* tic, char symbol, s32 x, s32 y, u8 color, bool alt)
+static inline void drawChar(tic_mem* tic, char symbol, s32 x, s32 y, u8 color)
 {
-    tic_api_print(tic, (char[]){symbol, '\0'}, x, y, color, true, 1, alt);
+    tic_api_print(tic, (char[]){symbol, '\0'}, x, y, color, true, 1, false);
 }
 
 static void drawCursor(Code* code, s32 x, s32 y, char symbol)
@@ -87,7 +88,7 @@ static void drawCursor(Code* code, s32 x, s32 y, char symbol)
         tic_api_rect(code->tic, x-1, y-1, getFontWidth(code)+1, TIC_FONT_HEIGHT+1, getConfig()->theme.code.cursor);
 
         if(symbol)
-            drawChar(code->tic, symbol, x, y, getConfig()->theme.code.bg, code->altFont);
+            drawChar(code->tic, symbol, x, y, getConfig()->theme.code.bg);
     }
 }
 
@@ -95,7 +96,7 @@ static void drawMatchedDelim(Code* code, s32 x, s32 y, char symbol, u8 color)
 {
     tic_api_rectb(code->tic, x-1, y-1, (getFontWidth(code))+1, TIC_FONT_HEIGHT+1,
                   getConfig()->theme.code.cursor);
-    drawChar(code->tic, symbol, x, y, color, code->altFont);
+    drawChar(code->tic, symbol, x, y, color);
 }
 
 static void drawCode(Code* code, bool withCursor)
@@ -132,14 +133,14 @@ static void drawCode(Code* code, bool withCursor)
                     tic_api_rect(code->tic, x, y, getFontWidth(code)+1, TIC_FONT_HEIGHT+1, tic_color_0);
 
                 tic_api_rect(code->tic, x-1, y-1, getFontWidth(code)+1, TIC_FONT_HEIGHT+1, selectColor);
-                drawChar(code->tic, symbol, x, y, tic_color_15, code->altFont);
+                drawChar(code->tic, symbol, x, y, tic_color_15);
             }
             else 
             {
                 if(code->shadowText)
-                    drawChar(code->tic, symbol, x+1, y+1, 0, code->altFont);
+                    drawChar(code->tic, symbol, x+1, y+1, 0);
 
-                drawChar(code->tic, symbol, x, y, theme->colors[*syntaxPointer], code->altFont);
+                drawChar(code->tic, symbol, x, y, theme->colors[*syntaxPointer]);
             }
         }
 
@@ -1138,6 +1139,17 @@ static void setOutlineMode(Code* code)
     updateOutlineCode(code);
 }
 
+static void setASCIIMode(Code* code)
+{
+	//code->outline.index = 0;
+
+	//initOutlineMode(code);
+
+	//qsort(code->outline.items, code->outline.size, sizeof(tic_outline_item), funcCompare);
+	//updateOutlineCode(code);
+	updateEditor(code);
+}
+
 static void setCodeMode(Code* code, s32 mode)
 {
     if(code->mode != mode)
@@ -1152,6 +1164,7 @@ static void setCodeMode(Code* code, s32 mode)
         case TEXT_FIND_MODE: setFindMode(code); break;
         case TEXT_GOTO_MODE: setGotoMode(code); break;
         case TEXT_OUTLINE_MODE: setOutlineMode(code); break;
+		case TEXT_ASCII_MODE: setASCIIMode(code); break;
         default: break;
         }
 
@@ -1244,6 +1257,7 @@ static void processKeyboard(Code* code)
         else if(keyWasPressed(tic_key_f))           setCodeMode(code, TEXT_FIND_MODE);
         else if(keyWasPressed(tic_key_g))           setCodeMode(code, TEXT_GOTO_MODE);
         else if(keyWasPressed(tic_key_o))           setCodeMode(code, TEXT_OUTLINE_MODE);
+		else if(keyWasPressed(tic_key_i))			setCodeMode(code, TEXT_ASCII_MODE);
         else if(keyWasPressed(tic_key_slash))       commentLine(code);
         else if(keyWasPressed(tic_key_home))        goCodeHome(code);
         else if(keyWasPressed(tic_key_end))         goCodeEnd(code);
@@ -1386,15 +1400,15 @@ static void drawPopupBar(Code* code, const char* title)
     enum {TextX = BOOKMARK_WIDTH, TextY = TOOLBAR_SIZE + 1};
 
     tic_api_rect(code->tic, 0, TOOLBAR_SIZE, TIC80_WIDTH, TIC_FONT_HEIGHT + 1, tic_color_14);
-
+	/*
     if(code->shadowText)
         tic_api_print(code->tic, title, TextX+1, TextY+1, tic_color_0, true, 1, code->altFont);
-
+	*/
     tic_api_print(code->tic, title, TextX, TextY, tic_color_12, true, 1, code->altFont);
-
+	/*
     if(code->shadowText)
         tic_api_print(code->tic, code->popup.text, TextX + (s32)strlen(title) * getFontWidth(code) + 1, TextY+1, tic_color_0, true, 1, code->altFont);
-
+	*/
     tic_api_print(code->tic, code->popup.text, TextX + (s32)strlen(title) * getFontWidth(code), TextY, tic_color_12, true, 1, code->altFont);
 
     drawCursor(code, TextX+(s32)(strlen(title) + strlen(code->popup.text)) * getFontWidth(code), TextY, ' ');
@@ -1543,6 +1557,91 @@ static void textGoToTick(Code* code)
     drawStatus(code);
 }
 
+static void drawASCIItable(Code* code, s32 x, s32 y)
+{
+    tic_rect rect = {x, y, 16*(TIC_FONT_WIDTH+1), 16*(TIC_FONT_HEIGHT+1)};
+
+	tic_api_rect(code->tic, rect.x - 1, rect.y, rect.w + 1, rect.h, tic_color_14);
+	
+	
+	for (u8 yyy = 0; yyy < 16; yyy++)
+	{
+		for (u8 xxx = 0; xxx < 16; xxx++)
+		{
+			tic_rect ASCIIrect = { rect.x + xxx * (TIC_FONT_WIDTH + 1),rect.y + yyy * (TIC_FONT_HEIGHT + 1),7,7 };
+			if (checkMousePos(&ASCIIrect))
+				tic_api_rect(code->tic, xxx*(TIC_FONT_WIDTH + 1) + rect.x, yyy*(TIC_FONT_HEIGHT + 1) + rect.y, 7, 7, tic_color_1);
+			tic_api_print(code->tic, (char[]) { xxx + (yyy * 16), '\0' }, xxx*(TIC_FONT_WIDTH + 1) + rect.x, yyy*(TIC_FONT_HEIGHT + 1) + rect.y, tic_color_12, true, 1, false);
+			if (checkMouseClick(&ASCIIrect,tic_mouse_left))
+			{
+				inputSymbol(code, xxx + yyy * 16);
+
+			}
+			//drawChar(code->tic, char[](xxx + yyy), xxx*TIC_FONT_WIDTH + rect.x, yyy*TIC_FONT_HEIGHT + rect.y, tic_color_12);
+		}
+	}
+	tic_rect outrect = { 0,0,TIC80_WIDTH,TIC80_HEIGHT };
+	if (!checkMousePos(&rect))
+		if (checkMouseClick(&outrect, tic_mouse_left))
+			code->mode = TEXT_EDIT_MODE;
+
+	/*
+    if(checkMousePos(&rect))
+    {
+        s32 mx = getMouseY() - rect.y;
+        mx /= STUDIO_TEXT_HEIGHT;
+		/*
+        if(mx < code->outline.size && code->outline.items[mx].pos)
+        {
+            setCursor(tic_cursor_hand);
+
+            if(checkMouseDown(&rect, tic_mouse_left))
+            {
+                //code->outline.index = mx;
+                //updateOutlineCode(code);
+
+            }
+
+            if(checkMouseClick(&rect, tic_mouse_left))
+                setCodeMode(code, TEXT_EDIT_MODE);
+        }
+		
+		//if (!checkMouseClick(&rect, tic_mouse_left))
+		//	setCodeMode(code, TEXT_EDIT_MODE);
+    }
+*/
+    
+/*
+    y++;
+
+    char filter[STUDIO_TEXT_BUFFER_WIDTH] = {0};
+    strncpy(filter, code->popup.text, sizeof(filter));
+
+    if(code->outline.items)
+    {
+        tic_api_rect(code->tic, rect.x - 1, rect.y + code->outline.index*STUDIO_TEXT_HEIGHT,
+            rect.w + 1, TIC_FONT_HEIGHT + 2, tic_color_2);
+
+        for(s32 i = 0; i < code->outline.size; i++)
+        {
+            const tic_outline_item* ptr = &code->outline.items[i];
+
+            char orig[STUDIO_TEXT_BUFFER_WIDTH] = {0};
+            strncpy(orig, ptr->pos, MIN(ptr->size, sizeof(orig)));
+
+            drawFilterMatch(code, x, y, orig, filter);
+
+            ptr++;
+            y += STUDIO_TEXT_HEIGHT;
+        }
+    }
+    else
+    {
+        tic_api_print(code->tic, "(empty)", x, y, tic_color_12, true, 1, code->altFont);
+    }
+*/
+}
+
 static void drawOutlineBar(Code* code, s32 x, s32 y)
 {
     tic_rect rect = {x, y, TIC80_WIDTH - x, TIC80_HEIGHT - y};
@@ -1595,11 +1694,22 @@ static void drawOutlineBar(Code* code, s32 x, s32 y)
     }
     else
     {
-        if(code->shadowText)
+        /*if(code->shadowText)
             tic_api_print(code->tic, "(empty)", x+1, y+1, tic_color_0, true, 1, code->altFont);
-
+		*/
         tic_api_print(code->tic, "(empty)", x, y, tic_color_12, true, 1, code->altFont);
     }
+}
+static void textASCIITick(Code* code)
+{
+
+	tic_api_cls(code->tic, getConfig()->theme.code.bg);
+
+	//drawCode(code, false);
+	drawCode(code, true);
+	//drawPopupBar(code, "ASCII");
+	drawStatus(code);
+	drawASCIItable(code, TIC80_WIDTH - 16 * (TIC_FONT_WIDTH + 1), 2 * (TIC_FONT_HEIGHT + 1));
 }
 
 static void textOutlineTick(Code* code)
@@ -1653,7 +1763,7 @@ static void textOutlineTick(Code* code)
     drawStatus(code);
     drawOutlineBar(code, TIC80_WIDTH - 13 * TIC_FONT_WIDTH, 2*(TIC_FONT_HEIGHT+1));
 }
-
+/*
 static void drawFontButton(Code* code, s32 x, s32 y)
 {
     tic_mem* tic = code->tic;
@@ -1679,6 +1789,37 @@ static void drawFontButton(Code* code, s32 x, s32 y)
     drawChar(tic, 'F', x, y, over ? tic_color_14 : tic_color_13, code->altFont);
 }
 
+*/
+
+static void drawASCIIButton(Code* code, s32 x, s32 y)
+{
+	tic_mem* tic = code->tic;
+
+	enum { Size = TIC_FONT_WIDTH };
+	tic_rect rect = { x, y, Size*5, Size };
+
+	bool over = false;
+	if (checkMousePos(&rect))
+	{
+		setCursor(tic_cursor_hand);
+
+		showTooltip("ASCII Table [ctrl+i]");
+
+		over = true;
+
+		if (checkMouseClick(&rect, tic_mouse_left))
+		{
+			if (code->mode == TEXT_ASCII_MODE) 
+				code->mode = TEXT_EDIT_MODE;
+			else
+				code->mode = TEXT_ASCII_MODE;
+		}
+	}
+
+	//drawChar(tic, 'ASCII', x, y, over ? tic_color_14 : tic_color_13);
+	tic_api_print(tic, "ASCII", x, y, over ? tic_color_14 : tic_color_15, true, 1, false);
+}
+/*
 static void drawShadowButton(Code* code, s32 x, s32 y)
 {
     tic_mem* tic = code->tic;
@@ -1730,7 +1871,7 @@ static void drawShadowButton(Code* code, s32 x, s32 y)
     if(code->shadowText)
         drawBitIcon(x, y, ShadowIcon, tic_color_0);
 }
-
+*/
 static void drawCodeToolbar(Code* code)
 {
     tic_api_rect(code->tic, 0, 0, TIC80_WIDTH, TOOLBAR_SIZE, tic_color_12);
@@ -1772,12 +1913,21 @@ static void drawCodeToolbar(Code* code)
         0b01111100,
         0b00000000,
         0b00000000,
+
+		0b00000000,
+		0b00111100,
+		0b01010000,
+		0b01111000,
+		0b01010000,
+		0b01011100,
+		0b00000000,
+		0b00000000,
     };
 
     enum {Count = sizeof Icons / BITS_IN_BYTE};
     enum {Size = 7};
 
-    static const char* Tips[] = {"RUN [ctrl+r]","FIND [ctrl+f]", "GOTO [ctrl+g]", "OUTLINE [ctrl+o]"};
+    static const char* Tips[] = {"RUN [ctrl+r]","FIND [ctrl+f]", "GOTO [ctrl+g]", "OUTLINE [ctrl+o]","ASCII [ctrl+i]"};
 
     for(s32 i = 0; i < Count; i++)
     {
@@ -1817,8 +1967,9 @@ static void drawCodeToolbar(Code* code)
         drawBitIcon(rect.x, rect.y, Icons + i*BITS_IN_BYTE, active ? tic_color_12 : (over ? tic_color_14 : tic_color_13));
     }
 
-    drawFontButton(code, TIC80_WIDTH - (Count+3) * Size, 1);
-    drawShadowButton(code, TIC80_WIDTH - (Count+2) * Size, 1);
+    //drawASCIIButton(code, TIC80_WIDTH - (Count+5) * Size, 1);
+    //drawFontButton(code, TIC80_WIDTH - (Count+3) * Size, 1);
+    //drawShadowButton(code, TIC80_WIDTH - (Count+2) * Size, 1);
 
     drawToolbar(code->tic, false);
 }
@@ -1835,6 +1986,7 @@ static void tick(Code* code)
     case TEXT_FIND_MODE: textFindTick(code); break;
     case TEXT_GOTO_MODE: textGoToTick(code); break;
     case TEXT_OUTLINE_MODE: textOutlineTick(code); break;
+	case TEXT_ASCII_MODE: textASCIITick(code); break;
     }
 
     drawCodeToolbar(code);
