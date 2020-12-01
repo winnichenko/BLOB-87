@@ -192,6 +192,16 @@ static void readCodeTheme(Config* config, lua_State* lua)
 
             lua_pop(lua, 1);
         }
+		
+		{
+			lua_getfield(lua, -1, "TAB_SYMBOL");
+
+			if (lua_isinteger(lua, -1))
+				config->data.theme.code.tab_symbol = (u8)lua_tointeger(lua, -1);
+
+			lua_pop(lua, 1);
+		}
+
 
         {
             lua_getfield(lua, -1, "SHADOW");

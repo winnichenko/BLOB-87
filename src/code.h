@@ -99,6 +99,7 @@ struct Code
     } outline;
 
     const char* matchedDelim;
+	bool show_tabs;
     bool altFont;
     bool shadowText;
 

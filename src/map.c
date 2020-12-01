@@ -336,7 +336,7 @@ static void drawTileIndex(Map* map, s32 x, s32 y) //draw tile index on a toolbar
     {
         char buf[] = "#999";
         sprintf(buf, "#%03i", index);
-        tic_api_print(map->tic, buf, x, y, tic_color_13, true, 1, false);
+        tic_api_print(map->tic, buf, x, y, tic_color_13, 1);
     }
 }
 
@@ -346,14 +346,14 @@ static void drawTilePageNum(Map* map, s32 x, s32 y) //draw tile index on a toolb
 	char buf[] = "P9"; 
 	sprintf(buf, "P%i", map->page);
 
-	tic_api_print(map->tic, buf, x, y, tic_color_14, true, 1, false);
+	tic_api_print(map->tic, buf, x, y, tic_color_14,1);
 
 }
 static void drawFlagMode(Map* map, s32 x, s32 y)
 {
 	char buf[] = "F";
 	//sprintf(buf,"F", )
-	tic_api_print(map->tic, buf, x, y, tic_color_14, true, 1, false);
+	tic_api_print(map->tic, buf, x, y, tic_color_14, 1);
 
 }
 
@@ -534,7 +534,7 @@ static void drawCursorPos(Map* map, s32 x, s32 y)
 
     sprintf(pos, "%03i:%03i", tx, ty);
 
-    s32 width = tic_api_print(map->tic, pos, TIC80_WIDTH, 0, tic_color_7, true, 1, false);
+    s32 width = tic_api_print(map->tic, pos, TIC80_WIDTH, 0, tic_color_7,1);
 
     s32 px = x + (TIC_SPRITESIZE + 3);
     if(px + width >= TIC80_WIDTH) px = x - (width + 2);
@@ -543,7 +543,7 @@ static void drawCursorPos(Map* map, s32 x, s32 y)
     if(py <= TOOLBAR_SIZE) py = y + (TIC_SPRITESIZE + 3);
 
     tic_api_rect(map->tic, px - 1, py - 1, width + 1, TIC_FONT_HEIGHT + 1, tic_color_12);
-    tic_api_print(map->tic, pos, px, py, tic_color_13, true, 1, false);
+    tic_api_print(map->tic, pos, px, py, tic_color_13,1);
 }
 
 static void setMapSprite(Map* map, s32 x, s32 y) //put sprite on map

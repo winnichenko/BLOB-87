@@ -138,6 +138,7 @@ typedef struct
             u8 bg;
             u8 select;
             u8 cursor;
+			u8 tab_symbol;
             bool shadow;
             bool altFont;
             bool matchDelimiters;

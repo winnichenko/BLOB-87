@@ -730,21 +730,21 @@ void tic_api_cls(tic_mem* memory, u8 color)
     }
 }
 
-static inline s32 drawChar(tic_mem* memory, u8 symbol, s32 x, s32 y, s32 width, s32 height, u8 color, s32 scale, bool alt)
+static inline s32 drawChar(tic_mem* memory, u8 symbol, s32 x, s32 y, s32 width, s32 height, u8 color, s32 scale)
 {
-    const u8* ptr = memory->ram.font.data + (symbol + (alt ? TIC_FONT_CHARS / 2 : 0))*BITS_IN_BYTE;
+    const u8* ptr = memory->ram.font.data + (symbol)*BITS_IN_BYTE;
     x += (BITS_IN_BYTE - 1)*scale;
 
     for(s32 i = 0, ys = y; i < TIC_FONT_HEIGHT; i++, ptr++, ys += scale)
-        for(s32 col = BITS_IN_BYTE - (alt ? TIC_ALTFONT_WIDTH : TIC_FONT_WIDTH), xs = x - col; col < BITS_IN_BYTE; col++, xs -= scale)
+        for(s32 col = BITS_IN_BYTE - (TIC_FONT_WIDTH), xs = x - col; col < BITS_IN_BYTE; col++, xs -= scale)
             if(*ptr & 1 << col)
                 tic_api_rect(memory, xs, ys, scale, scale, color);
 
-    return (alt ? TIC_ALTFONT_WIDTH : TIC_FONT_WIDTH)*scale;
+    return (TIC_FONT_WIDTH)*scale;
 }
 
-typedef s32(DrawCharFunc)(tic_mem* memory, u8 symbol, s32 x, s32 y, s32 width, s32 height, u8 color, s32 scale, bool alt);
-static s32 drawText(tic_mem* memory, const char* text, s32 x, s32 y, s32 width, s32 height, u8 color, s32 scale, DrawCharFunc* func, bool alt)
+typedef s32(DrawCharFunc)(tic_mem* memory, u8 symbol, s32 x, s32 y, s32 width, s32 height, u8 color, s32 scale);
+static s32 drawText(tic_mem* memory, const char* text, s32 x, s32 y, s32 width, s32 height, u8 color, s32 scale, DrawCharFunc* func)
 {
     s32 pos = x;
     s32 MAX = x;
@@ -760,15 +760,15 @@ static s32 drawText(tic_mem* memory, const char* text, s32 x, s32 y, s32 width, 
             pos = x;
             y += height * scale;
         }
-        else pos += func(memory, sym, pos, y, width, height, color, scale, alt);
+        else pos += func(memory, sym, pos, y, width, height, color, scale);
     }
 
     return pos > MAX ? pos - x : MAX - x;
 }
 
-static inline s32 drawNonFixedChar(tic_mem* memory, u8 symbol, s32 x, s32 y, s32 width, s32 height, u8 color, s32 scale, bool alt)
+static inline s32 drawNonFixedChar(tic_mem* memory, u8 symbol, s32 x, s32 y, s32 width, s32 height, u8 color, s32 scale)
 {
-    const u8* ptr = memory->ram.font.data + (symbol + (alt ? TIC_FONT_CHARS / 2 : 0))*BITS_IN_BYTE;
+    const u8* ptr = memory->ram.font.data + (symbol)*BITS_IN_BYTE;
 
     s32 start = 0;
     s32 end = width;
@@ -801,10 +801,10 @@ static inline s32 drawNonFixedChar(tic_mem* memory, u8 symbol, s32 x, s32 y, s32
     return (size ? size + 1 : width - 2) * scale;
 }
 
-s32 tic_api_print(tic_mem* memory, const char* text, s32 x, s32 y, u8 color, bool fixed, s32 scale, bool alt)
+s32 tic_api_print(tic_mem* memory, const char* text, s32 x, s32 y, u8 color, s32 scale)
 {
     //return drawText(memory, text, x, y, alt ? TIC_ALTFONT_WIDTH : TIC_FONT_WIDTH, TIC_FONT_HEIGHT, color, scale,/* fixed ? drawChar : drawNonFixedChar,*/ alt);
-    return drawText(memory, text, x, y, alt ? TIC_ALTFONT_WIDTH : TIC_FONT_WIDTH, TIC_FONT_HEIGHT, color, scale, drawChar, alt);
+    return drawText(memory, text, x, y, TIC_FONT_WIDTH, TIC_FONT_HEIGHT, color, scale, drawChar);
 }
 
 static void drawSprite(tic_mem* memory, const tic_tiles* src, s32 index, s32 x, s32 y, u8* colors, s32 count, s32 scale, tic_flip flip, tic_rotate rotate)
@@ -877,14 +877,14 @@ void tic_api_fset(tic_mem* memory, s32 index, u8 flag, bool value)
         *getFlag(memory, index, flag) &= ~(1 << flag);
 }
 
-s32 drawSpriteFont(tic_mem* memory, u8 symbol, s32 x, s32 y, s32 width, s32 height, u8 chromakey, s32 scale, bool alt)
+s32 drawSpriteFont(tic_mem* memory, u8 symbol, s32 x, s32 y, s32 width, s32 height, u8 chromakey, s32 scale)
 {
     tic_api_spr(memory, &memory->ram.sprites, symbol, x, y, 1, 1, &chromakey, 1, scale, tic_no_flip, tic_no_rotate);
 
     return width * scale;
 }
 
-s32 drawFixedSpriteFont(tic_mem* memory, u8 index, s32 x, s32 y, s32 width, s32 height, u8 chromakey, s32 scale, bool alt)
+s32 drawFixedSpriteFont(tic_mem* memory, u8 index, s32 x, s32 y, s32 width, s32 height, u8 chromakey, s32 scale)
 {
     const u8* ptr = memory->ram.sprites.data[index].data;
 
@@ -2466,10 +2466,10 @@ void tic_api_exit(tic_mem* tic)
     machine->data->exit(machine->data->data);
 }
 
-s32 tic_api_font(tic_mem* tic, const char* text, s32 x, s32 y, u8 chromakey, s32 w, s32 h, bool fixed, s32 scale, bool alt)
+s32 tic_api_font(tic_mem* tic, const char* text, s32 x, s32 y, u8 chromakey, s32 w, s32 h, s32 scale)
 {
     //return drawText(tic, text, x, y, w, h, chromakey, scale, /*fixed ? drawSpriteFont : drawFixedSpriteFont,*/ alt);
-    return drawText(tic, text, x, y, w, h, chromakey, scale, drawSpriteFont, alt);
+    return drawText(tic, text, x, y, w, h, chromakey, scale, drawSpriteFont);
 }
 
 void tic_api_mouse(tic_mem* memory) {}

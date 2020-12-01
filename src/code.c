@@ -55,9 +55,9 @@ static void drawStatus(Code* code)
     enum {Height = TIC_FONT_HEIGHT + 1, StatusY = TIC80_HEIGHT - TIC_FONT_HEIGHT};
 
     tic_api_rect(code->tic, 0, TIC80_HEIGHT - Height, TIC80_WIDTH, Height, tic_color_12);
-    tic_api_print(code->tic, code->statusLine, 0, StatusY, getConfig()->theme.code.bg, true, 1, false);
+    tic_api_print(code->tic, code->statusLine, 0, StatusY, getConfig()->theme.code.bg, 1);
     tic_api_print(code->tic, code->statusSize, TIC80_WIDTH - strlen(code->statusSize) * TIC_FONT_WIDTH, 
-        StatusY, getConfig()->theme.code.bg, true, 1, false);
+        StatusY, getConfig()->theme.code.bg, 1);
 }
 
 static void drawBookmarks(Code* code)
@@ -73,7 +73,7 @@ static inline s32 getFontWidth(Code* code)
 
 static inline void drawChar(tic_mem* tic, char symbol, s32 x, s32 y, u8 color)
 {
-    tic_api_print(tic, (char[]){symbol, '\0'}, x, y, color, true, 1, false);
+    tic_api_print(tic, (char[]){symbol, '\0'}, x, y, color, 1);
 }
 
 static void drawCursor(Code* code, s32 x, s32 y, char symbol)
@@ -87,8 +87,18 @@ static void drawCursor(Code* code, s32 x, s32 y, char symbol)
 
         tic_api_rect(code->tic, x-1, y-1, getFontWidth(code)+1, TIC_FONT_HEIGHT+1, getConfig()->theme.code.cursor);
 
-        if(symbol)
-            drawChar(code->tic, symbol, x, y, getConfig()->theme.code.bg);
+		if (symbol) 
+		{
+			if (symbol == 9)
+			{
+				if(code->show_tabs)
+					drawChar(code->tic, getConfig()->theme.code.tab_symbol, x, y, getConfig()->theme.code.bg);
+			}
+			else
+			{
+				drawChar(code->tic, symbol, x, y, getConfig()->theme.code.bg);
+			}
+		}
     }
 }
 
@@ -107,7 +117,8 @@ static void drawCode(Code* code, bool withCursor)
     s32 x = xStart;
     s32 y = rect.y - code->scroll.y * STUDIO_TEXT_HEIGHT;
     const char* pointer = code->src;
-
+	u8 tab = getConfig()->theme.code.tab_symbol;
+	bool showtabs = code->show_tabs;
     u8 selectColor = getConfig()->theme.code.select;
     const struct tic_code_theme* theme = &getConfig()->theme.code.syntax;
     const u8* syntaxPointer = code->syntax;
@@ -129,18 +140,37 @@ static void drawCode(Code* code, bool withCursor)
         {
             if(code->cursor.selection && pointer >= selection.start && pointer < selection.end)
             {
-                if(code->shadowText)
+                /*
+				if(code->shadowText)
                     tic_api_rect(code->tic, x, y, getFontWidth(code)+1, TIC_FONT_HEIGHT+1, tic_color_0);
-
+				*/
                 tic_api_rect(code->tic, x-1, y-1, getFontWidth(code)+1, TIC_FONT_HEIGHT+1, selectColor);
-                drawChar(code->tic, symbol, x, y, tic_color_15);
+				if (symbol == 9)//draw special symbol instead of tab code 009
+				{
+					if (showtabs)
+						drawChar(code->tic, tab, x, y, tic_color_14);
+				}
+				else
+				{
+					drawChar(code->tic, symbol, x, y, tic_color_15);
+				}
             }
             else 
             {
-                if(code->shadowText)
+               /*
+				if(code->shadowText)
                     drawChar(code->tic, symbol, x+1, y+1, 0);
-
-                drawChar(code->tic, symbol, x, y, theme->colors[*syntaxPointer]);
+				*/
+				if (symbol == 9) //draw special symbol instead of tab code 009
+				{
+					if (showtabs)
+						//drawChar(code->tic, tab, x, y, theme->colors[*syntaxPointer]);
+						drawChar(code->tic, tab, x, y, tic_color_14);
+				}
+				else
+				{
+					drawChar(code->tic, symbol, x, y, theme->colors[*syntaxPointer]);
+				}
             }
         }
 
@@ -170,7 +200,7 @@ static void drawCode(Code* code, bool withCursor)
         cursor.x = x, cursor.y = y;
 
     if(withCursor && cursor.x >= 0 && cursor.y >= 0)
-        drawCursor(code, cursor.x, cursor.y, cursor.symbol);
+        drawCursor(code, cursor.x, cursor.y, cursor.symbol, tab);
 
     if(matchedDelim.symbol) {
         drawMatchedDelim(code, matchedDelim.x, matchedDelim.y,
@@ -1074,9 +1104,9 @@ static void drawFilterMatch(Code *code, s32 x, s32 y, const char* orig, const ch
         u8 color = match ? tic_color_3 : tic_color_12;
 
         if(code->shadowText)
-            drawChar(code->tic, *orig, x+1, y+1, tic_color_0, code->altFont);
+            drawChar(code->tic, *orig, x+1, y+1, tic_color_0);
 
-        drawChar(code->tic, *orig, x, y, color, code->altFont);
+        drawChar(code->tic, *orig, x, y, color);
         x += getFontWidth(code);
         if(match)
             filter++;
@@ -1382,7 +1412,7 @@ static void textEditTick(Code* code)
 
         if(sym)
         {
-            inputSymbol(code, sym);
+            inputSymbol(code, sym+(code->altFont ? 128:0));
             updateEditor(code);
         }
     }
@@ -1404,12 +1434,12 @@ static void drawPopupBar(Code* code, const char* title)
     if(code->shadowText)
         tic_api_print(code->tic, title, TextX+1, TextY+1, tic_color_0, true, 1, code->altFont);
 	*/
-    tic_api_print(code->tic, title, TextX, TextY, tic_color_12, true, 1, code->altFont);
+    tic_api_print(code->tic, title, TextX, TextY, tic_color_12, 1);
 	/*
     if(code->shadowText)
         tic_api_print(code->tic, code->popup.text, TextX + (s32)strlen(title) * getFontWidth(code) + 1, TextY+1, tic_color_0, true, 1, code->altFont);
 	*/
-    tic_api_print(code->tic, code->popup.text, TextX + (s32)strlen(title) * getFontWidth(code), TextY, tic_color_12, true, 1, code->altFont);
+    tic_api_print(code->tic, code->popup.text, TextX + (s32)strlen(title) * getFontWidth(code), TextY, tic_color_12, 1);
 
     drawCursor(code, TextX+(s32)(strlen(title) + strlen(code->popup.text)) * getFontWidth(code), TextY, ' ');
 }
@@ -1561,8 +1591,8 @@ static void drawASCIItable(Code* code, s32 x, s32 y)
 {
     tic_rect rect = {x, y, 16*(TIC_FONT_WIDTH+1), 16*(TIC_FONT_HEIGHT+1)};
 
-	tic_api_rect(code->tic, rect.x - 1, rect.y, rect.w + 1, rect.h, tic_color_14);
-	
+	tic_api_rect(code->tic, rect.x - 1, rect.y-6, rect.w + 1, rect.h+6, tic_color_14);
+	tic_api_print(code->tic, "ASCII index:",x,y-6,tic_color_13,1);
 	
 	for (u8 yyy = 0; yyy < 16; yyy++)
 	{
@@ -1570,8 +1600,17 @@ static void drawASCIItable(Code* code, s32 x, s32 y)
 		{
 			tic_rect ASCIIrect = { rect.x + xxx * (TIC_FONT_WIDTH + 1),rect.y + yyy * (TIC_FONT_HEIGHT + 1),7,7 };
 			if (checkMousePos(&ASCIIrect))
-				tic_api_rect(code->tic, xxx*(TIC_FONT_WIDTH + 1) + rect.x, yyy*(TIC_FONT_HEIGHT + 1) + rect.y, 7, 7, tic_color_1);
-			tic_api_print(code->tic, (char[]) { xxx + (yyy * 16), '\0' }, xxx*(TIC_FONT_WIDTH + 1) + rect.x, yyy*(TIC_FONT_HEIGHT + 1) + rect.y, tic_color_12, true, 1, false);
+			{
+				char buf[] = "#999";
+				sprintf(buf, "#%03i", xxx + yyy * 16);
+				tic_api_print(code->tic, buf, x+72, y - 6, tic_color_13, 1);
+
+				tic_api_rect(code->tic, xxx*(TIC_FONT_WIDTH + 1) + rect.x, yyy*(TIC_FONT_HEIGHT + 1) + rect.y, 7, 7, tic_color_2);
+			}
+			tic_api_print(code->tic, (char[]) { xxx + (yyy * 16), '\0' }, xxx*(TIC_FONT_WIDTH + 1) + rect.x, yyy*(TIC_FONT_HEIGHT + 1) + rect.y, tic_color_12, 1);
+			
+			
+
 			if (checkMouseClick(&ASCIIrect,tic_mouse_left))
 			{
 				inputSymbol(code, xxx + yyy * 16);
@@ -1697,7 +1736,7 @@ static void drawOutlineBar(Code* code, s32 x, s32 y)
         /*if(code->shadowText)
             tic_api_print(code->tic, "(empty)", x+1, y+1, tic_color_0, true, 1, code->altFont);
 		*/
-        tic_api_print(code->tic, "(empty)", x, y, tic_color_12, true, 1, code->altFont);
+        tic_api_print(code->tic, "(empty)", x, y, tic_color_12, 1);
     }
 }
 static void textASCIITick(Code* code)
@@ -1763,10 +1802,11 @@ static void textOutlineTick(Code* code)
     drawStatus(code);
     drawOutlineBar(code, TIC80_WIDTH - 13 * TIC_FONT_WIDTH, 2*(TIC_FONT_HEIGHT+1));
 }
-/*
+
+
 static void drawFontButton(Code* code, s32 x, s32 y)
 {
-    tic_mem* tic = code->tic;
+	tic_mem* tic = code->tic;
 
     enum {Size = TIC_FONT_WIDTH};
     tic_rect rect = {x, y, Size, Size};
@@ -1776,7 +1816,7 @@ static void drawFontButton(Code* code, s32 x, s32 y)
     {
         setCursor(tic_cursor_hand);
 
-        showTooltip("SWITCH FONT");
+        showTooltip("Extended symbols");
 
         over = true;
 
@@ -1786,17 +1826,17 @@ static void drawFontButton(Code* code, s32 x, s32 y)
         }
     }
 
-    drawChar(tic, 'F', x, y, over ? tic_color_14 : tic_color_13, code->altFont);
+    drawChar(tic, 'F', x, y, over ? (code->altFont ? tic_color_7 : tic_color_14) : (code->altFont ? tic_color_6 : tic_color_13));
 }
 
-*/
+
 
 static void drawASCIIButton(Code* code, s32 x, s32 y)
 {
 	tic_mem* tic = code->tic;
 
 	enum { Size = TIC_FONT_WIDTH };
-	tic_rect rect = { x, y, Size*5, Size };
+	tic_rect rect = { x, y, Size+1, Size };
 
 	bool over = false;
 	if (checkMousePos(&rect))
@@ -1817,7 +1857,55 @@ static void drawASCIIButton(Code* code, s32 x, s32 y)
 	}
 
 	//drawChar(tic, 'ASCII', x, y, over ? tic_color_14 : tic_color_13);
-	tic_api_print(tic, "ASCII", x, y, over ? tic_color_14 : tic_color_15, true, 1, false);
+	if (code->mode == TEXT_ASCII_MODE)
+	{
+		tic_api_rect(tic, rect.x, rect.y, rect.w, rect.h, tic_color_14);
+		tic_api_print(tic, (char[]) { 146, '\0' }, x+1, y + 1, tic_color_0, 1);
+		tic_api_print(tic, (char[]) { 146, '\0' }, x+1, y, tic_color_12, 1);
+	}
+	else {
+		tic_api_print(tic, (char[]) { 146, '\0' }, x+1, y, over ? tic_color_14 : tic_color_13, 1);
+	}
+
+
+}
+
+static void drawTABButton(Code* code, s32 x, s32 y)
+{
+	static const u8 Icon[] =
+	{
+		0b00001001,
+		0b00000101,
+		0b11111111,
+		0b00000101,
+		0b00001001,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+	};
+
+	tic_mem* tic = code->tic;
+
+	enum { Size = TIC_FONT_WIDTH };
+	tic_rect rect = { x, y, Size, Size };
+
+	bool over = false;
+	if (checkMousePos(&rect))
+	{
+		setCursor(tic_cursor_hand);
+
+		showTooltip("Show tabs");
+
+		over = true;
+
+		if (checkMouseClick(&rect, tic_mouse_left))
+		{
+			code->show_tabs = !code->show_tabs;
+		}
+	}
+	bool tabs = code->show_tabs;
+
+	drawBitIcon(rect.x, rect.y, Icon, over ? (code->show_tabs ? tic_color_7 : tic_color_14) : (code->show_tabs ? tic_color_6 : tic_color_13));
 }
 /*
 static void drawShadowButton(Code* code, s32 x, s32 y)
@@ -1913,21 +2001,12 @@ static void drawCodeToolbar(Code* code)
         0b01111100,
         0b00000000,
         0b00000000,
-
-		0b00000000,
-		0b00111100,
-		0b01010000,
-		0b01111000,
-		0b01010000,
-		0b01011100,
-		0b00000000,
-		0b00000000,
     };
 
     enum {Count = sizeof Icons / BITS_IN_BYTE};
     enum {Size = 7};
 
-    static const char* Tips[] = {"RUN [ctrl+r]","FIND [ctrl+f]", "GOTO [ctrl+g]", "OUTLINE [ctrl+o]","ASCII [ctrl+i]"};
+    static const char* Tips[] = {"RUN [ctrl+r]","FIND [ctrl+f]", "GOTO [ctrl+g]", "OUTLINE [ctrl+o]"};
 
     for(s32 i = 0; i < Count; i++)
     {
@@ -1961,14 +2040,15 @@ static void drawCodeToolbar(Code* code)
         bool active = i == code->mode - TEXT_EDIT_MODE && i != 0;
         if (active)
         {
-            tic_api_rect(code->tic, rect.x, rect.y, Size, Size, tic_color_14);
+            tic_api_rect(code->tic, rect.x, rect.y, rect.w, rect.h, tic_color_14);
             drawBitIcon(rect.x, rect.y + 1, Icons + i * BITS_IN_BYTE, tic_color_0);
         }
         drawBitIcon(rect.x, rect.y, Icons + i*BITS_IN_BYTE, active ? tic_color_12 : (over ? tic_color_14 : tic_color_13));
     }
 
-    //drawASCIIButton(code, TIC80_WIDTH - (Count+5) * Size, 1);
-    //drawFontButton(code, TIC80_WIDTH - (Count+3) * Size, 1);
+    drawASCIIButton(code, TIC80_WIDTH - (Count+2) * Size, 1);
+    drawFontButton(code, TIC80_WIDTH - (Count+3) * Size, 1);
+	drawTABButton(code, TIC80_WIDTH - (Count+5) * Size, 1);
     //drawShadowButton(code, TIC80_WIDTH - (Count+2) * Size, 1);
 
     drawToolbar(code->tic, false);
@@ -2030,30 +2110,31 @@ void initCode(Code* code, tic_mem* tic, tic_code* src)
 
     *code = (Code)
     {
-        .tic = tic,
-        .src = src->data,
-        .tick = tick,
-        .escape = escape,
-        .cursor = {{src->data, NULL, 0}, NULL, 0},
-        .scroll = {0, 0, {0, 0}, false},
-        .syntax = code->syntax,
-        .tickCounter = 0,
-        .history = NULL,
-        .cursorHistory = NULL,
-        .mode = TEXT_EDIT_MODE,
-        .jump = {.line = -1},
-        .popup =
-        {
-            .prevPos = NULL,
-            .prevSel = NULL,
-        },
-        .outline =
-        {
-            .items = NULL,
-            .size = 0,
-            .index = 0,
-        },
-        .matchedDelim = NULL,
+		.tic = tic,
+			.src = src->data,
+			.tick = tick,
+			.escape = escape,
+			.cursor = { {src->data, NULL, 0}, NULL, 0 },
+			.scroll = { 0, 0, {0, 0}, false },
+			.syntax = code->syntax,
+			.tickCounter = 0,
+			.history = NULL,
+			.cursorHistory = NULL,
+			.mode = TEXT_EDIT_MODE,
+			.jump = { .line = -1 },
+			.popup =
+		{
+			.prevPos = NULL,
+			.prevSel = NULL,
+		},
+		.outline =
+		{
+			.items = NULL,
+			.size = 0,
+			.index = 0,
+		},
+		.matchedDelim = NULL,
+		.show_tabs = false,
         .altFont = getConfig()->theme.code.altFont,
         .shadowText = getConfig()->theme.code.shadow,
         .event = onStudioEvent,

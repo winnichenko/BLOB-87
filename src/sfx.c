@@ -186,7 +186,7 @@ static void drawVolumeStereo(Sfx* sfx, s32 x, s32 y)
                 effect->stereo_left = ~effect->stereo_left;
         }
 
-        tic_api_print(tic, "L", rect.x, rect.y, effect->stereo_left ? hover ? tic_color_14 : tic_color_15 : tic_color_5, true, 1, true);
+        tic_api_print(tic, "L", rect.x, rect.y, effect->stereo_left ? hover ? tic_color_14 : tic_color_15 : tic_color_5, 1);
     }
 
     {
@@ -204,7 +204,7 @@ static void drawVolumeStereo(Sfx* sfx, s32 x, s32 y)
                 effect->stereo_right = ~effect->stereo_right;
         }
 
-        tic_api_print(tic, "R", rect.x, rect.y, effect->stereo_right ? hover ? tic_color_14 : tic_color_15 : tic_color_5, true, 1, true);
+        tic_api_print(tic, "R", rect.x, rect.y, effect->stereo_right ? hover ? tic_color_14 : tic_color_15 : tic_color_5, 1);
     }
 }
 
@@ -233,7 +233,7 @@ static void drawArppeggioSwitch(Sfx* sfx, s32 x, s32 y)
                 effect->reverse = ~effect->reverse;
         }
 
-        tic_api_print(tic, Label, rect.x, rect.y, effect->reverse ? tic_color_5 : hover ? tic_color_14 : tic_color_15, true, 1, true);
+        tic_api_print(tic, Label, rect.x, rect.y, effect->reverse ? tic_color_5 : hover ? tic_color_14 : tic_color_15, 1);
     }
 }
 
@@ -262,7 +262,7 @@ static void drawPitchSwitch(Sfx* sfx, s32 x, s32 y)
                 effect->pitch16x = ~effect->pitch16x;
         }
 
-        tic_api_print(tic, Label, rect.x, rect.y, effect->pitch16x ? tic_color_5 : hover ? tic_color_14 : tic_color_15, true, 1, true);
+        tic_api_print(tic, Label, rect.x, rect.y, effect->pitch16x ? tic_color_5 : hover ? tic_color_14 : tic_color_15,1);
     }
 }
 
@@ -297,7 +297,7 @@ static void drawVolWaveSelector(Sfx* sfx, s32 x, s32 y)
                 sfx->volwave = item->panel;
         }
 
-        tic_api_print(tic, item->label, x + item->rect.x, y + item->rect.y, item->panel == sfx->volwave ? tic_color_5 : hover ? tic_color_14 : tic_color_15, true, 1, true);
+        tic_api_print(tic, item->label, x + item->rect.x, y + item->rect.y, item->panel == sfx->volwave ? tic_color_5 : hover ? tic_color_14 : tic_color_15,1);
     }
 }
 
@@ -313,7 +313,7 @@ static void drawCanvas(Sfx* sfx, s32 x, s32 y, s32 canvasTab)
     drawPanelBorder(tic, x, y, Width, Height, tic_color_0);
 
     static const char* Labels[] = {"", "", "ARPEGG", "PITCH"};
-    tic_api_print(tic, Labels[canvasTab], x + 2, y + 2, tic_color_15, true, 1, true);
+    tic_api_print(tic, Labels[canvasTab], x + 2, y + 2, tic_color_15,1);
 
     switch(canvasTab)
     {
@@ -334,7 +334,7 @@ static void drawCanvas(Sfx* sfx, s32 x, s32 y, s32 canvasTab)
         break;
     }
 
-    tic_api_print(tic, "LOOP:", x + 2, y + 20, tic_color_15, true, 1, true);
+    tic_api_print(tic, "LOOP:", x + 2, y + 20, tic_color_15, 1);
 
     static const u8 LeftArrow[] =
     {
@@ -414,7 +414,7 @@ static void drawCanvas(Sfx* sfx, s32 x, s32 y, s32 canvasTab)
     {
         char buf[] = "0";
         sprintf(buf, "%X", effect->loops[canvasTab].start);
-        tic_api_print(tic, buf, x + 6, y + 27, tic_color_14, true, 1, true);
+        tic_api_print(tic, buf, x + 6, y + 27, tic_color_14, 1);
     }
 
     {
@@ -460,7 +460,7 @@ static void drawCanvas(Sfx* sfx, s32 x, s32 y, s32 canvasTab)
     {
         char buf[] = "0";
         sprintf(buf, "%X", effect->loops[canvasTab].size);
-        tic_api_print(tic, buf, x + 18, y + 27, tic_color_14, true, 1, true);
+        tic_api_print(tic, buf, x + 18, y + 27, tic_color_14,1);
     }
 
     drawCanvasLeds(sfx, x + 26, y, canvasTab);
@@ -867,7 +867,7 @@ static void drawSpeedPanel(Sfx* sfx, s32 x, s32 y)
         }
     }
 
-    tic_api_print(tic, "SPD", x, y, tic_color_15, true, 1, true);
+    tic_api_print(tic, "SPD", x, y, tic_color_15, 1);
 
     for(s32 i = 0; i < Count; i++)
         tic_api_rect(tic, rect.x + i * ColWidthGap, rect.y, ColWidth, rect.h, i - MaxSpeed <= effect->speed ? tic_color_5 : hover == i ? tic_color_14 : tic_color_15);
@@ -933,8 +933,8 @@ static void drawSelector(Sfx* sfx, s32 x, s32 y)
     {
         char buf[] = "00";
         sprintf(buf, "%02i", sfx->index);
-        tic_api_print(tic, buf, x + 20, y + 2, tic_color_5, true, 1, true);
-        tic_api_print(tic, "IDX", x + 6, y + 2, tic_color_15, true, 1, true);
+        tic_api_print(tic, buf, x + 20, y + 2, tic_color_5, 1);
+        tic_api_print(tic, "IDX", x + 6, y + 2, tic_color_15, 1);
     }
 
     drawSpeedPanel(sfx, x + 40, y + 2);

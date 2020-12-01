@@ -1057,7 +1057,7 @@ static s32 lua_print(lua_State* lua)
             return 1;
         }
 
-        s32 size = tic_api_print(tic, text ? text : "nil", x, y, color, fixed, scale, alt);
+        s32 size = tic_api_print(tic, text ? text : "nil", x, y, color, scale);
 
         lua_pushinteger(lua, size);
 

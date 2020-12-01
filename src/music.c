@@ -146,7 +146,7 @@ static void drawEditbox(Music* music, s32 x, s32 y, s32 value, void(*set)(Music*
 
         char val[] = "99";
         sprintf(val, "%02i", value);
-        tic_api_print(music->tic, val, x, y, tic_color_12, true, 1, false);
+        tic_api_print(music->tic, val, x, y, tic_color_12, 1);
     }
 
     {
@@ -199,8 +199,8 @@ static void drawSwitch(Music* music, s32 x, s32 y, const char* label, s32 value,
         0b00000000,
     };
 
-    tic_api_print(music->tic, label, x, y+1, tic_color_0, true, 1, false);
-    tic_api_print(music->tic, label, x, y, tic_color_12, true, 1, false);
+    tic_api_print(music->tic, label, x, y+1, tic_color_0, 1);
+    tic_api_print(music->tic, label, x, y, tic_color_12, 1);
 
     {
         x += (s32)strlen(label)*TIC_FONT_WIDTH;
@@ -229,8 +229,8 @@ static void drawSwitch(Music* music, s32 x, s32 y, const char* label, s32 value,
     {
         char val[] = "999";
         sprintf(val, "%02i", value);
-        tic_api_print(music->tic, val, x + TIC_FONT_WIDTH, y+1, tic_color_0, true, 1, false);
-        tic_api_print(music->tic, val, x += TIC_FONT_WIDTH, y, tic_color_12, true, 1, false);
+        tic_api_print(music->tic, val, x + TIC_FONT_WIDTH, y+1, tic_color_0, 1);
+        tic_api_print(music->tic, val, x += TIC_FONT_WIDTH, y, tic_color_12,1);
     }
 
     {
@@ -1250,15 +1250,15 @@ static void drawTrackerFrames(Music* music, s32 x, s32 y)
             tic_api_rect(music->tic, x - 1, y - 1 + i*TIC_FONT_HEIGHT, Width, TIC_FONT_HEIGHT + 1, tic_color_2);
         }
 
-        tic_api_print(music->tic, buf, x, y + i*TIC_FONT_HEIGHT, i == music->tracker.frame ? tic_color_0 : tic_color_13, true, 1, false);
+        tic_api_print(music->tic, buf, x, y + i*TIC_FONT_HEIGHT, i == music->tracker.frame ? tic_color_0 : tic_color_13, 1);
     }
 
     if(music->tracker.row >= 0)
     {
         char buf[] = "99";
         sprintf(buf, "%02i", music->tracker.row);
-        tic_api_print(music->tic, buf, x, y - 10, tic_color_0, true, 1, false);
-        tic_api_print(music->tic, buf, x, y - 11, tic_color_12, true, 1, false);
+        tic_api_print(music->tic, buf, x, y - 10, tic_color_0, 1);
+        tic_api_print(music->tic, buf, x, y - 11, tic_color_12, 1);
     }
 }
 
@@ -1279,7 +1279,7 @@ static void setChannelPattern(Music* music, s32 delta, s32 channel)
 
 static inline void drawChar(tic_mem* tic, char symbol, s32 x, s32 y, u8 color, bool alt)
 {
-    tic_api_print(tic, (char[]){symbol, '\0'}, x, y, color, true, 1, alt);
+    tic_api_print(tic, (char[]){symbol, '\0'}, x, y, color, 1);
 }
 
 static void drawTrackerChannel(Music* music, s32 x, s32 y, s32 channel)
@@ -1398,7 +1398,7 @@ static void drawTrackerChannel(Music* music, s32 x, s32 y, s32 channel)
                 drawChar(music->tic, sym, colx, rowy, colors[ColorIndexes[c]], false);
             }
         }
-        else tic_api_print(music->tic, rowStr, x, rowy, i == music->tracker.row ? tic_color_0 : tic_color_15, true, 1, false);
+        else tic_api_print(music->tic, rowStr, x, rowy, i == music->tracker.row ? tic_color_0 : tic_color_15, 1);
 
         if (i == music->tracker.row)
         {
@@ -1630,7 +1630,7 @@ static void drawPianoLayout(Music* music)
     tic_api_cls(music->tic, tic_color_14);
 
     static const char Wip[] = "PIANO MODE - WORK IN PROGRESS...";
-    tic_api_print(music->tic, Wip, (TIC80_WIDTH - (sizeof Wip - 1) * TIC_FONT_WIDTH) / 2, TIC80_HEIGHT / 2, tic_color_12, true, 1, false);
+    tic_api_print(music->tic, Wip, (TIC80_WIDTH - (sizeof Wip - 1) * TIC_FONT_WIDTH) / 2, TIC80_HEIGHT / 2, tic_color_12, 1);
 }
 
 static void scrollNotes(Music* music, s32 delta)

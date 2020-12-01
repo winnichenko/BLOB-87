@@ -246,10 +246,10 @@ static void drawKeyboardLabels(s32 shift)
     {
         const Label* label = Labels + i;
         if(label->text)
-            tic_api_print(tic, label->text, label->x, label->y + shift, tic_color_3, true, 1, label->alt);
+            tic_api_print(tic, label->text, label->x, label->y + shift, tic_color_3,1);
 
         if(label->shift)
-            tic_api_print(tic, label->shift, label->x + 6, label->y + shift + 2, tic_color_10, true, 1, label->alt);
+            tic_api_print(tic, label->shift, label->x + 6, label->y + shift + 2, tic_color_10, 1);
     }
 }
 

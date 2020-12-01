@@ -452,8 +452,8 @@ static void drawCanvasOvr(Sprite* sprite, s32 x, s32 y)
 
         s32 ix = x + (CANVAS_SIZE - 4*TIC_FONT_WIDTH)/2;
         s32 iy = TIC_SPRITESIZE + 2;
-        tic_api_print(tic, buf, ix, iy+1, tic_color_0, true, 1, false);
-        tic_api_print(tic, buf, ix, iy, tic_color_12, true, 1, false);
+        tic_api_print(tic, buf, ix, iy+1, tic_color_0, 1);
+        tic_api_print(tic, buf, ix, iy, tic_color_12, 1);
     }
 }
 
@@ -706,7 +706,7 @@ static void drawFlags(Sprite* sprite, s32 x, s32 y)
             tic_api_pix(tic, rect.x+3, rect.y+1, tic_color_12, false);
         }
 
-        tic_api_print(tic, (char[]){'0' + i, '\0'}, rect.x + (Size+2), rect.y, tic_color_13, false, 1, true);
+        tic_api_print(tic, (char[]){'0' + i, '\0'}, rect.x + (Size+2), rect.y, tic_color_13, 1);
     }
 }
 
@@ -832,7 +832,7 @@ static void drawRGBSlider(Sprite* sprite, s32 x, s32 y, u8* value)
         {
             char buf[] = "FF";
             sprintf(buf, "%02X", *value);
-            tic_api_print(tic, buf, x - 18, y - 2, tic_color_13, true, 1, false);
+            tic_api_print(tic, buf, x - 18, y - 2, tic_color_13, 1);
         }
     }
 
@@ -1710,7 +1710,7 @@ static void drawSpriteToolbar(Sprite* sprite)
         tic_rect rect = {TIC80_WIDTH - 4 * TIC_FONT_WIDTH - 4, 0, 2 * TIC_FONT_WIDTH + 1, TIC_SPRITESIZE-1};
         //tic_api_rect(tic, rect.x, rect.y, rect.w, rect.h, bg ? tic_color_0 : tic_color_14);
         tic_api_rect(tic, rect.x, rect.y, rect.w, rect.h, tic_color_14);
-        tic_api_print(tic, Label, rect.x+1, rect.y+1, tic_color_12, true, 1, false);
+        tic_api_print(tic, Label, rect.x+1, rect.y+1, tic_color_12, 1);
 
         if(checkMousePos(&rect))
         {
@@ -1731,7 +1731,7 @@ static void drawSpriteToolbar(Sprite* sprite)
         tic_rect rect = {TIC80_WIDTH - 2 * TIC_FONT_WIDTH - 2, 0, 2 * TIC_FONT_WIDTH + 1, TIC_SPRITESIZE-1};
         //tic_api_rect(tic, rect.x, rect.y, rect.w, rect.h, bg ? tic_color_14 : tic_color_0);
         tic_api_rect(tic, rect.x, rect.y, rect.w, rect.h, tic_color_14);
-        tic_api_print(tic, Label, rect.x+1, rect.y+1, tic_color_12, true, 1, false);
+        tic_api_print(tic, Label, rect.x+1, rect.y+1, tic_color_12, 1);
 
         if(checkMousePos(&rect))
         {

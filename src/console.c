@@ -242,7 +242,7 @@ static void commandDone(Console* console)
 
 static inline void drawChar(tic_mem* tic, char symbol, s32 x, s32 y, u8 color, bool alt)
 {
-    tic_api_print(tic, (char[]){symbol, '\0'}, x, y, color, true, 1, alt);
+    tic_api_print(tic, (char[]){symbol, '\0'}, x, y, color, 1);
 }
 
 static void drawCursor(Console* console, s32 x, s32 y, u8 symbol)

@@ -92,7 +92,7 @@ typedef struct
 //      |---------+-------+---------+------------------- - - -
 //      |         |       |         |
 #define TIC_API_LIST(macro) \
-    macro(print,        7,  s32,    tic_mem*, const char* text, s32 x, s32 y, u8 color, bool fixed, s32 scale, bool alt) \
+    macro(print,        7,  s32,    tic_mem*, const char* text, s32 x, s32 y, u8 color, s32 scale) \
     macro(cls,          1,  void,   tic_mem*, u8 color) \
     macro(pix,          3,  u8,     tic_mem*, s32 x, s32 y, u8 color, bool get) \
     macro(line,         5,  void,   tic_mem*, s32 x1, s32 y1, s32 x2, s32 y2, u8 color) \
@@ -118,7 +118,7 @@ typedef struct
     macro(time,         0,  double, tic_mem*) \
     macro(tstamp,       0,  s32,    tic_mem*) \
     macro(exit,         0,  void,   tic_mem*) \
-    macro(font,         8,  s32,    tic_mem*, const char* text, s32 x, s32 y, u8 chromakey, s32 w, s32 h, bool fixed, s32 scale, bool alt) \
+    macro(font,         8,  s32,    tic_mem*, const char* text, s32 x, s32 y, u8 chromakey, s32 w, s32 h, s32 scale) \
     macro(mouse,        0,  void,   tic_mem*) \
     macro(circ,         4,  void,   tic_mem*, s32 x, s32 y, s32 radius, u8 color) \
     macro(circb,        4,  void,   tic_mem*, s32 x, s32 y, s32 radius, u8 color) \
