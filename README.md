@@ -2,10 +2,10 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/1pflw77cjd8mqggb/branch/master?svg=true)](https://ci.appveyor.com/project/nesbox/tic-80)
 
 ![TIC-80](https://tic.computer/img/logo64.png)
-**TIC-80 TINY COMPUTER** - [https://tic.computer/](https://tic.computer/)
+**BLOB-87 your TIC-80's advanced brother!** - [https://tic.computer/](https://tic.computer/)
 
 # About
-TIC-80 is a **FREE** and **OPEN SOURCE** fantasy computer for making, playing and sharing tiny games.
+BLOB-87 is a **FREE** and **OPEN SOURCE** fantasy computer for making, playing and sharing tiny games.
 
 With TIC-80 you get built-in tools for development: code, sprites, maps, sound editors and the command line, which is enough to create a mini retro game.
 
