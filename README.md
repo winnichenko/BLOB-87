@@ -6,6 +6,7 @@
 
 # About
 BLOB-87 is a **FREE** and **OPEN SOURCE** fantasy computer for making, playing and sharing tiny games.
+BLOB-87 is the fork of TIC-80 project basically aimed on extending some spec limitations.
 
 With TIC-80 you get built-in tools for development: code, sprites, maps, sound editors and the command line, which is enough to create a mini retro game.
 
@@ -39,7 +40,7 @@ You can contribute by issuing a bug or requesting a new feature on our [issues p
 Keep in mind when engaging on a discussion to follow our [Code of Conduct](https://github.com/nesbox/TIC-80/blob/master/CODE_OF_CONDUCT.md).
 
 You can also contribute by reviewing or improving our [wiki](https://github.com/nesbox/tic.computer/wiki).
-The [wiki](https://github.com/nesbox/tic.computer/wiki) holds TIC-80 documentation, code snippets and game development tutorials.
+The [wiki](https://github.com/nesbox/tic.computer/wiki) holds BLOB-87 documentation, code snippets and game development tutorials.
 
 # Build instructions
 
