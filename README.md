@@ -9,9 +9,9 @@ BLOB-87 is a **FREE** and **OPEN SOURCE** fantasy computer for making, playing a
 
 With TIC-80 you get built-in tools for development: code, sprites, maps, sound editors and the command line, which is enough to create a mini retro game.
 
-Games are packaged into a cartridge file, which can be easily distributed. TIC-80 works on all popular platforms. This means your cartridge can be played in any device.
+Games are packaged into a cartridge file, which can be easily distributed. ИДЩИ-87 works on all popular platforms. This means your cartridge can be played in any device.
 
-To make a retro styled game, the whole process of creation and execution takes place under some technical limitations: 240x136 pixel display, 16 color palette, 256 8x8 color sprites, 4 channel sound, etc.
+To make a retro styled game, the whole process of creation and execution takes place under some technical limitations: 256x224 pixel display, 64 color palette, 2048 8x8 color sprites, 4 channel sound, etc.
 
 ![TIC-80](https://user-images.githubusercontent.com/1101448/29687467-3ddc432e-8925-11e7-8156-5cec3700cc04.gif)
 
@@ -28,17 +28,6 @@ To make a retro styled game, the whole process of creation and execution takes p
 # Binary Downloads
 You can download compiled versions for the major operating systems directly from our [releases page](https://github.com/nesbox/TIC-80/releases).
 
-# Pro Version
-To help support TIC-80 development, we have a [PRO Version](https://nesbox.itch.io/tic).
-This version has a few additional features and binaries can only be downloaded on [our Itch.io page](https://nesbox.itch.io/tic).
-
-For users who can't spend the money, we made it easy to build the pro version from the source code.
-
-### Pro features
-
-- Save/load cartridges in text format, and create your game in any editor you want, also useful for version control systems.
-- Even more memory banks: instead of having only 1 memory bank you have 8.
-- Export your game without editors, and then publish it to app stores (WIP).
 
 # Community
 You can play and share games, tools and music at [tic.computer](https://tic.computer/play).
@@ -46,7 +35,7 @@ You can play and share games, tools and music at [tic.computer](https://tic.comp
 The community also hangs out and discusses on [Discord chat](https://discord.gg/DkD73dP).
 
 # Contributing
-You are can contribute by issuing a bug or requesting a new feature on our [issues page](https://github.com/nesbox/tic.computer/issues).
+You can contribute by issuing a bug or requesting a new feature on our [issues page](https://github.com/nesbox/tic.computer/issues).
 Keep in mind when engaging on a discussion to follow our [Code of Conduct](https://github.com/nesbox/TIC-80/blob/master/CODE_OF_CONDUCT.md).
 
 You can also contribute by reviewing or improving our [wiki](https://github.com/nesbox/tic.computer/wiki).
