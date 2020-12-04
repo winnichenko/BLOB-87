@@ -39,6 +39,8 @@ struct Sprite
     u8 color2;
     u8 size;
     u8 brushSize;
+	s32 LastDrawX;
+	s32 LastDrawY;
 
     bool editPalette;
 

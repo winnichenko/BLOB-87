@@ -150,7 +150,29 @@ static void processPickerCanvasMouse(Sprite* sprite, s32 x, s32 y, s32 sx, s32 s
             sprite->color2 = getSheetPixel(sprite, sx + mx / Size, sy + my / Size);
     }
 }
+static void sheetLine(Sprite* sprite, s32 x0, s32 y0, s32 x1, s32 y1, u8 R,u8 color)
+{
+	if (y0 > y1)
+	{
+		SWAP(x0, x1, s32);
+		SWAP(y0, y1, s32);
 
+	}
+	s32 dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+	s32 dy = y1 - y0;
+	s32 err = (dx > dy ? dx : -dy) / 2, e2;
+	for (;;)
+	{
+		for (s32 j = 0; j < R; j++)
+			for (s32 i = 0; i < R; i++)
+				setSheetPixel(sprite, x0 + i, y0 + j, color);
+		
+		if (x0 == x1 && y0 == y1)break;
+		e2 = err;
+		if (e2 > -dx) { err -= dy; x0 += sx; }
+		if (e2 < dy) { err += dx; y0++; }
+	}
+}
 static void processDrawCanvasMouse(Sprite* sprite, s32 x, s32 y, s32 sx, s32 sy)
 {
     tic_rect rect = {x, y, CANVAS_SIZE, CANVAS_SIZE};
@@ -162,6 +184,9 @@ static void processDrawCanvasMouse(Sprite* sprite, s32 x, s32 y, s32 sx, s32 sy)
 
         s32 mx = getMouseX() - x;
         s32 my = getMouseY() - y;
+
+		//sprite->LastDrawX = mx;
+		//sprite->LastDrawY = my;
 
         s32 brushSize = sprite->brushSize*Size;
         s32 offset = (brushSize - Size) / 2;
@@ -183,8 +208,10 @@ static void processDrawCanvasMouse(Sprite* sprite, s32 x, s32 y, s32 sx, s32 sy)
         bool left = checkMouseDown(&rect, tic_mouse_left);
         bool right = checkMouseDown(&rect, tic_mouse_right);
 
+		
         if(left || right)
         {
+			/*
             sx += mx / Size;
             sy += my / Size;
             u8 color = left ? sprite->color : sprite->color2;
@@ -193,7 +220,36 @@ static void processDrawCanvasMouse(Sprite* sprite, s32 x, s32 y, s32 sx, s32 sy)
             for(s32 j = 0; j < pixels; j++)
                 for(s32 i = 0; i < pixels; i++)
                     setSheetPixel(sprite, sx+i, sy+j, color);
+			*/
 
+			u8 color = left ? sprite->color : sprite->color2;
+			//u8 color = sprite->color;
+			//u8 color2 = sprite->color2;
+			
+			s32 mmx = sprite->LastDrawX - x;
+			s32 mmy = sprite->LastDrawY - y;
+			mmx -= offset;
+			mmy -= offset;
+			mmx -= mmx % Size;
+			mmy -= mmy % Size;
+			if (mmx < 0)mmx = 0;
+			if (mmy < 0)mmy = 0;
+			if (mmx + brushSize >= CANVAS_SIZE) mmx = CANVAS_SIZE - brushSize;
+			if (mmy + brushSize >= CANVAS_SIZE) mmy = CANVAS_SIZE - brushSize;
+			s32 dx = sx + mx / Size;
+			s32 dy = sy + my / Size;
+
+			s32 ssx = sx+mmx / Size;
+			s32 ssy = sy+mmy / Size;
+			//if (left) setSheetPixel(sprite, dx, dy, color);
+			//if (right) setSheetPixel(sprite, ssx, ssy, color2);
+			//setSheetPixel(sprite, dx, dy, color);
+			if (sprite->brushSize == 1) { 
+				setSheetPixel(sprite, dx, dy, color);
+			}
+			else {
+				sheetLine(sprite, dx, dy, ssx, ssy, sprite->brushSize, color);
+			}
             history_add(sprite->history);
         }
     }
@@ -412,7 +468,7 @@ static void drawBrushSlider(Sprite* sprite, s32 x, s32 y)
 static void drawCanvasOvr(Sprite* sprite, s32 x, s32 y)
 {
     tic_mem* tic = sprite->tic;
-
+	
     const s32 Size = CANVAS_SIZE / sprite->size;
     const tic_rect rect = getSpriteRect(sprite);
 
@@ -1821,7 +1877,7 @@ static void overline(tic_mem* tic, void* data)	//UI, empty spaces fillers betwee
 
     for(const tic_rect* r = bg; r < bg + COUNT_OF(bg); r++)
         tic_api_rect(tic, r->x, r->y, r->w, r->h, tic_color_14);
-
+	
     drawCanvasOvr(sprite, 24, 20);
     drawMoveButtons(sprite);
     drawFlags(sprite, 24+64+7, 20+8);
@@ -1835,6 +1891,9 @@ static void overline(tic_mem* tic, void* data)	//UI, empty spaces fillers betwee
     
     drawSpriteToolbar(sprite);
     drawToolbar(tic, false);
+	
+	sprite->LastDrawX = getMouseX();
+	sprite->LastDrawY = getMouseY();
 }
 
 void initSprite(Sprite* sprite, tic_mem* tic, tic_tiles* src)
@@ -1855,6 +1914,8 @@ void initSprite(Sprite* sprite, tic_mem* tic, tic_tiles* src)
         .size = TIC_SPRITESIZE,
         .editPalette = false,
         .brushSize = 1,
+		.LastDrawX=0,
+		.LastDrawY=0,
         .select = 
         {
             .rect = {0,0,0,0},
