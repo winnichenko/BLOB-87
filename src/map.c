@@ -297,6 +297,45 @@ static s32 drawPenButton(Map* map, s32 x, s32 y)
     return drawToolButton(map, x, y, Icon, ICON_SIZE, "DRAW [1]", MAP_DRAW_MODE);
 }
 
+static s32 drawEraseButton(Map* map, s32 x, s32 y)
+{
+	static const u8 GridIcon[] =
+	{
+		0b00000000,
+		0b00011100,
+		0b00111100,
+		0b01011100,
+		0b01001000,
+		0b00110000,
+		0b00000000,
+		0b00000000,
+	};
+
+	x -= ICON_SIZE;
+
+	tic_rect rect = { x, y, ICON_SIZE, ICON_SIZE };
+
+	bool over = false;
+
+	if (checkMousePos(&rect))
+	{
+		setCursor(tic_cursor_hand);
+
+		over = true;
+
+		showTooltip("ERASE [0]");
+
+		if (checkMouseClick(&rect, tic_mouse_left))
+		{
+			map->erase = !map->erase;
+		}
+	}
+
+	drawBitIcon(x, y, GridIcon, map->erase ? tic_color_0 : over ? tic_color_14 : tic_color_13);
+
+	return x;
+}
+
 static void drawTileIndex(Map* map, s32 x, s32 y) //draw tile index on a toolbar
 {
     s32 index = -1;
@@ -354,7 +393,6 @@ static void drawFlagMode(Map* map, s32 x, s32 y)
 	char buf[] = "F";
 	//sprintf(buf,"F", )
 	tic_api_print(map->tic, buf, x, y, tic_color_14, 1);
-
 }
 
 static void drawMapToolbar(Map* map, s32 x, s32 y)
@@ -373,6 +411,7 @@ static void drawMapToolbar(Map* map, s32 x, s32 y)
     x = drawSelectButton(map, x, 0);
     x = drawHandButton(map, x, 0);
     x = drawPenButton(map, x, 0);
+	x = drawEraseButton(map, x, 0);
 
     x = drawGridButton(map, x - 5, 0);
     drawWorldButton(map, x, 0);
@@ -555,9 +594,10 @@ static void setMapSprite(Map* map, s32 x, s32 y) //put sprite on map
 
 		for (s32 j = 0; j < map->sheet.rect.h; j++)
 			for (s32 i = 0; i < map->sheet.rect.w; i++)
+			{
 				//tic_api_mset(map->tic, map->src, (x+i)%TIC_MAP_WIDTH, (y+j)%TIC_MAP_HEIGHT, ((mx+i) + (my+j) * SHEET_COLS)+TIC_PAGE_SPRITES*map->page);
 				tic_api_mset(map->tic, map->src, x + i % TIC_MAP_WIDTH, y + j % TIC_MAP_HEIGHT, ((mx + i) + (my + j) * SHEET_COLS) + TIC_PAGE_SPRITES * map->page);
-
+			}
 		history_add(map->history);
 	}
 	else
@@ -633,18 +673,23 @@ static void processMouseDrawMode(Map* map)
             s32 w = tx - map->canvas.start.x;
             s32 h = ty - map->canvas.start.y;
 
-            if(w % map->sheet.rect.w == 0 && h % map->sheet.rect.h == 0)
-                setMapSprite(map, tx, ty);
+			if (w % map->sheet.rect.w == 0 && h % map->sheet.rect.h == 0)
+			{
+				if (map->erase)
+					tic_api_mset(map->tic, map->src, tx, ty, 2048);
+				else
+					setMapSprite(map, tx, ty);
+			}
         }
         else
         {
-            map->canvas.draw    = true;
+            map->canvas.draw = true;
             map->canvas.start = (tic_point){tx, ty};
         }
     }
     else
     {
-        map->canvas.draw    = false;
+        map->canvas.draw = false;
     }
 
     if(checkMouseDown(&rect, tic_mouse_middle))
@@ -1023,12 +1068,13 @@ static void drawMapReg(Map* map)
 			TIC_MAP_SCREEN_WIDTH + 1, TIC_MAP_SCREEN_HEIGHT + 1, -scrollX, -scrollY, -1, 1, NULL, NULL);
 	}
 	else
-	{
+	{	//bug uses current palette instead of config
 		tic_api_flagmap(tic, map->src_flags, &getConfig()->cart->bank0.tiles, map->scroll.x / TIC_SPRITESIZE, map->scroll.y / TIC_SPRITESIZE,
 			TIC_MAP_SCREEN_WIDTH + 1, TIC_MAP_SCREEN_HEIGHT + 1, -scrollX, -scrollY, -1);
 	}
 	
-    if(map->canvas.grid || map->scroll.active)
+    //if(map->canvas.grid || map->scroll.active)
+    if(map->canvas.grid)
         drawGrid(map);
 
     if(!sheetVisible(map) && checkMousePos(&rect))
@@ -1206,6 +1252,14 @@ static void processKeyboard(Map* map)
         }
 }
 
+static void drawBackground(tic_mem *tic)
+{
+	//draw map background for showing transparency on map
+	for (u8 j = 0; j < TIC80_WIDTH / TIC_SPRITESIZE; j++)
+		for (u8 i = 0; i < TIC80_HEIGHT / TIC_SPRITESIZE; i++)
+			tic_api_spr(tic, &getConfig()->cart->bank0.tiles, 192, j*TIC_SPRITESIZE, i*TIC_SPRITESIZE, 1, 1, NULL, 0, 1, tic_no_flip, tic_no_rotate);
+}
+
 static void tick(Map* map)
 {
     tic_mem* tic = map->tic;
@@ -1213,8 +1267,20 @@ static void tick(Map* map)
 
     processKeyboard(map);
 
-    drawMapReg(map); //draw map field
-    drawSheetReg(map, BLOB87_MAPSHEETX,BLOB87_MAPSHEETY); // draw spritesheet
+    //drawMapReg(map); //draw map field
+    //drawSheetReg(map, BLOB87_MAPSHEETX,BLOB87_MAPSHEETY); // draw spritesheet
+}
+
+static void tock(tic_mem* tic, void* data)
+{
+	Map* map = (Map*)data;
+
+	//map->tickCounter++;
+
+	//processKeyboard(map);
+
+	drawMapReg(map); //draw map field
+	drawSheetReg(map, BLOB87_MAPSHEETX, BLOB87_MAPSHEETY); // draw spritesheet
 }
 
 static void onStudioEvent(Map* map, StudioEvent event)
@@ -1291,7 +1357,7 @@ void initMap(Map* map, tic_mem* tic, tic_map* src, tic_mapflags* mflags)
         .mode = MAP_DRAW_MODE,
         .canvas = 
         {
-            .grid = true,
+            .grid = false,
             .draw = false,
             .start = {0, 0},
         },
@@ -1327,6 +1393,8 @@ void initMap(Map* map, tic_mem* tic, tic_map* src, tic_mapflags* mflags)
         .event = onStudioEvent,
         .overline = overline,
         .scanline = scanline,
+		.background = drawBackground,
+		.tock = tock,
     };
 
     normalizeMap(&map->scroll.x, &map->scroll.y);

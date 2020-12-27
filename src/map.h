@@ -37,12 +37,15 @@ struct Map
 
 	u8 page; //spritesheet page 8x256 sprites
 
+	bool erase;
+
     enum
     {
         MAP_DRAW_MODE = 0,
         MAP_DRAG_MODE,
         MAP_SELECT_MODE,
         MAP_FILL_MODE,
+		//MAP_ERASE_MODE,
     } mode;
 
     struct
@@ -93,6 +96,8 @@ struct Map
     void (*event)(Map*, StudioEvent);
     void (*scanline)(tic_mem* tic, s32 row, void* data);
     void (*overline)(tic_mem* tic, void* data);
+	void (*background)(tic_mem* tic);
+	void (*tock)(tic_mem* tic);
 };
 
 void initMap(Map*, tic_mem*, tic_map* src, tic_mapflags* mflags);

@@ -50,6 +50,8 @@ typedef struct tic_mem tic_mem;
 typedef void(*tic_tick)(tic_mem* memory);
 typedef void(*tic_scanline)(tic_mem* memory, s32 row, void* data);
 typedef void(*tic_overline)(tic_mem* memory, void* data);
+typedef void(*tic_background)(tic_mem* memory);
+typedef void(*tic_tock)(tic_mem* memory);
 
 typedef struct
 {
@@ -177,7 +179,7 @@ void tic_core_tick_start(tic_mem* memory, const tic_sfx* sfx, const tic_music* m
 void tic_core_tick(tic_mem* memory, tic_tick_data* data);
 void tic_core_tick_end(tic_mem* memory);
 void tic_core_blit(tic_mem* tic);
-void tic_core_blit_ex(tic_mem* tic, tic_scanline scanline, tic_overline overline, void* data);
+void tic_core_blit_ex(tic_mem* tic, tic_tick tick, tic_scanline scanline, tic_overline overline, void* data);
 const tic_script_config* tic_core_script_config(tic_mem* memory);
 
 typedef struct

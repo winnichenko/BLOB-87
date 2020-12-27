@@ -442,7 +442,13 @@ static void drawMap(tic_machine* machine, const tic_map* src, const tic_tiles* t
             if (remap)
                 remap(data, mi, mj, &tile);
 
-           drawTile(machine, tiles->data + tile.index, ii, jj, &chromakey, 1, scale, tile.flip, tile.rotate);
+			// &getConfig()->cart->bank0.tiles
+			//tic_tile drawing_tile = tiles->data + tile.index;
+			if(*(src->data+index) != 2048)
+				drawTile(machine, tiles->data + tile.index, ii, jj, &chromakey, 1, scale, tile.flip, tile.rotate);
+			//else
+				//drawTile(machine, , ii, jj, &chromakey, 1, scale, tile.flip, tile.rotate);
+           //drawTile(machine, tiles->data + tile.index, ii, jj, &chromakey, 1, scale, tile.flip, tile.rotate);
         }
 }
 
@@ -1252,7 +1258,7 @@ void tic_api_flagmap(tic_mem* memory, const tic_mapflags* src, const tic_tiles* 
 
 void tic_api_mset(tic_mem* memory, tic_map* src, s32 x, s32 y, u16 value)
 {
-	value = CLAMP(value, 0, 2047); //safety measure
+	value = CLAMP(value, 0, 2048); //safety measure
 	if(x < 0 || x >= TIC_MAP_WIDTH || y < 0 || y >= TIC_MAP_HEIGHT) return;
 
     *(src->data + y * TIC_MAP_WIDTH + x) = value;
@@ -1262,7 +1268,7 @@ u16 tic_api_mget(tic_mem* memory, const tic_map* src, s32 x, s32 y)
 {
     if(x < 0 || x >= TIC_MAP_WIDTH || y < 0 || y >= TIC_MAP_HEIGHT) return 0;
     
-    return (CLAMP(*(src->data + y * TIC_MAP_WIDTH + x),0,2047)); // clamping for safety
+    return (CLAMP(*(src->data + y * TIC_MAP_WIDTH + x),0,2048)); // clamping for safety
 }
 
 void tic_api_mfset(tic_mem* memory, tic_mapflags* src, s32 x, s32 y, u8 value) //set map flag
@@ -2311,7 +2317,7 @@ void tic_core_blit_ex(tic_mem* tic, tic_scanline scanline, tic_overline overline
 
 }
 */
-void tic_core_blit_ex(tic_mem* tic, tic_scanline scanline, tic_overline overline, void* data)
+void tic_core_blit_ex(tic_mem* tic, tic_tock tock, tic_scanline scanline, tic_overline overline, tic_background background, void* data)
 {
 	const u32* pal = tic_tool_palette_blit(&tic->ram.vram.palette);
 
@@ -2319,6 +2325,8 @@ void tic_core_blit_ex(tic_mem* tic, tic_scanline scanline, tic_overline overline
 		tic_machine* machine = (tic_machine*)tic;
 		memcpy(machine->state.ovr.palette, pal, sizeof machine->state.ovr.palette);
 	}
+	
+	
 
 	if (scanline)
 	{
@@ -2331,25 +2339,30 @@ void tic_core_blit_ex(tic_mem* tic, tic_scanline scanline, tic_overline overline
 
 	u32* out = tic->screen;
 
-	memset4(&out[0 * TIC80_FULLWIDTH], pal[tic->ram.vram.vars.border], TIC80_FULLWIDTH*Top);
+	memset(&out[0 * TIC80_FULLWIDTH], pal[tic->ram.vram.vars.border], TIC80_FULLWIDTH*Top); //possibly border render
 
 	u32* rowPtr = out + (Top*TIC80_FULLWIDTH);
+	
+	
+	
+	
 	for (s32 r = 0; r < TIC80_HEIGHT; r++, rowPtr += TIC80_FULLWIDTH)
 	{
+		
 		u32 *colPtr = rowPtr + Left;
-		memset4(rowPtr, pal[tic->ram.vram.vars.border], Left);
+		memset(rowPtr, pal[tic->ram.vram.vars.border], Left); //possible border render
 
 		s32 pos = (r + tic->ram.vram.vars.offset.y + TIC80_HEIGHT) % TIC80_HEIGHT * TIC80_WIDTH;
 
 		u32 x = (-tic->ram.vram.vars.offset.x + TIC80_WIDTH) % TIC80_WIDTH;
+		
 		for (s32 c = 0; c < TIC80_WIDTH; c++)
 		{
 			u8 val = ((u8*)tic->ram.vram.screen.data)[pos + c];
 			*(colPtr + (x++ % TIC80_WIDTH)) = pal[val];
-			//*(colPtr + (x++ % TIC80_WIDTH)) = pal[val >> 4];
 		}
-
-		memset4(rowPtr + (TIC80_FULLWIDTH - Right), pal[tic->ram.vram.vars.border], Right);
+		
+		memset(rowPtr + (TIC80_FULLWIDTH - Right), pal[tic->ram.vram.vars.border], Right); //possibly border render
 
 		if (scanline && (r < TIC80_HEIGHT - 1))
 		{
@@ -2357,8 +2370,21 @@ void tic_core_blit_ex(tic_mem* tic, tic_scanline scanline, tic_overline overline
 			pal = tic_tool_palette_blit(&tic->ram.vram.palette);
 		}
 	}
+	if (background)
+		background(tic);
 
-	memset4(&out[(TIC80_FULLHEIGHT - Bottom) * TIC80_FULLWIDTH], pal[tic->ram.vram.vars.border], TIC80_FULLWIDTH*Bottom);
+	if (tock)
+	{
+		{
+			tic_machine* machine = (tic_machine*)tic;
+			memcpy(machine->state.ovr.palette, pal, sizeof machine->state.ovr.palette);
+		}
+		tock(tic, data);
+	}
+
+	memset(&out[(TIC80_FULLHEIGHT - Bottom) * TIC80_FULLWIDTH], pal[tic->ram.vram.vars.border], TIC80_FULLWIDTH*Bottom); //possibly border render
+	
+
 
 	if (overline)
 		overline(tic, data);
@@ -2383,7 +2409,7 @@ static inline void overline(tic_mem* memory, void* data)
 
 void tic_core_blit(tic_mem* tic)
 {
-    tic_core_blit_ex(tic, scanline, overline, NULL);
+    tic_core_blit_ex(tic, NULL, scanline, overline, NULL, NULL);
 }
 
 u8 tic_api_peek(tic_mem* memory, s32 address)
