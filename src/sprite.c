@@ -1829,11 +1829,26 @@ static void tick(Sprite* sprite)
 
     processKeyboard(sprite);
 
-    drawCanvas(sprite, CanvasX, CanvasY);
-    drawPalette(sprite, PaletteX, PaletteY);
-    drawSheet(sprite, SheetX, SheetY);
+   //drawCanvas(sprite, CanvasX, CanvasY);
+    //drawPalette(sprite, PaletteX, PaletteY);
+    //drawSheet(sprite, SheetX, SheetY);
 
     sprite->tickCounter++;
+}
+
+/*
+static void tock(tic_mem* tic, void* data)
+{
+	Map* map = (Map*)data;
+*/
+static void tock(tic_mem*tic, void* data)
+{
+	//tic_mem* tic = sprite->tic;
+	Sprite* sprite = (Sprite*)data;
+
+	drawCanvas(sprite, CanvasX, CanvasY);
+	drawPalette(sprite, PaletteX, PaletteY);
+	drawSheet(sprite, SheetX, SheetY);
 }
 
 static void onStudioEvent(Sprite* sprite, StudioEvent event)
@@ -1850,8 +1865,9 @@ static void onStudioEvent(Sprite* sprite, StudioEvent event)
 
 static void scanline(tic_mem* tic, s32 row, void* data)
 {
-    if(row == 0)
-        memcpy(&tic->ram.vram.palette, getBankPalette(), sizeof(tic_palette));
+
+    //if(row == 0)
+        //memcpy(&tic->ram.vram.palette, getBankPalette(), sizeof(tic_palette));
 }
 
 static void overline(tic_mem* tic, void* data)	//UI, empty spaces fillers between editors
@@ -1929,6 +1945,7 @@ void initSprite(Sprite* sprite, tic_mem* tic, tic_tiles* src)
         .event = onStudioEvent,
         .overline = overline,
         .scanline = scanline,
+		.tock = tock,
     };
 }
 

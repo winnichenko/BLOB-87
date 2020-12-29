@@ -202,6 +202,18 @@ static void readCodeTheme(Config* config, lua_State* lua)
 			lua_pop(lua, 1);
 		}
 
+		{
+			lua_getfield(lua, -1, "BG_SPRITE");
+
+			if (lua_isinteger(lua, -1)) {
+				u16 bg_sprite = (u16)lua_tointeger(lua, -1);
+				config->data.theme.map.bg_sprite_init = bg_sprite; //sprite for transparent background fill in Map and Sprite editors
+				config->data.theme.sprite.bg_sprite_init = bg_sprite;
+			}
+
+			lua_pop(lua, 1);
+		}
+
 
         {
             lua_getfield(lua, -1, "SHADOW");

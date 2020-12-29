@@ -297,6 +297,7 @@ static s32 drawPenButton(Map* map, s32 x, s32 y)
     return drawToolButton(map, x, y, Icon, ICON_SIZE, "DRAW [1]", MAP_DRAW_MODE);
 }
 
+
 static s32 drawEraseButton(Map* map, s32 x, s32 y)
 {
 	static const u8 GridIcon[] =
@@ -332,6 +333,36 @@ static s32 drawEraseButton(Map* map, s32 x, s32 y)
 	}
 
 	drawBitIcon(x, y, GridIcon, map->erase ? tic_color_0 : over ? tic_color_14 : tic_color_13);
+
+	return x;
+}
+
+static s32 drawBackgroundButton(Map* map, s32 x, s32 y)
+{
+	x -= ICON_SIZE;
+
+	tic_rect rect = { x, y, ICON_SIZE, ICON_SIZE };
+
+	bool over = false;
+
+	if (checkMousePos(&rect))
+	{
+		setCursor(tic_cursor_hand);
+
+		over = true;
+
+		showTooltip("BACKGROUND [B]");
+
+		if (checkMouseClick(&rect, tic_mouse_left))
+		{
+			map->bgsprite += 1; 
+			if (map->bgsprite > map->bgsprite_init + 3) 
+				map->bgsprite = map->bgsprite_init;
+		}
+	}
+
+	tic_api_spr(map->tic, &getConfig()->cart->bank0.tiles, map->bgsprite, x, y-1, 1, 1, NULL, 0, 1, tic_no_flip, tic_no_rotate);
+	tic_api_rectb(map->tic, x, y, 8, 7, tic_color_12);
 
 	return x;
 }
@@ -413,8 +444,9 @@ static void drawMapToolbar(Map* map, s32 x, s32 y)
     x = drawPenButton(map, x, 0);
 	x = drawEraseButton(map, x, 0);
 
-    x = drawGridButton(map, x - 5, 0);
-    drawWorldButton(map, x, 0);
+    x = drawGridButton(map, x, 0);
+    x = drawWorldButton(map, x, 0);
+	drawBackgroundButton(map, x, 0);
 }
 
 static void drawSheetOvr(Map* map, s32 x, s32 y) // white border around map spritesheet
@@ -1233,6 +1265,8 @@ static void processKeyboard(Map* map)
         else if(keyWasPressed(tic_key_delete)) deleteSelection(map);
         else if(keyWasPressed(tic_key_grave)) map->canvas.grid = !map->canvas.grid;
 		else if(keyWasPressed(tic_key_f)) { map->map_flags.show = !map->map_flags.show; }
+		else if (keyWasPressed(tic_key_b)) { map->bgsprite += 1; if (map->bgsprite > map->bgsprite_init+3) map->bgsprite = map->bgsprite_init; } // not good need separate variables for current and default bg_sprites
+
     }
 
     enum{Step = 1};
@@ -1252,19 +1286,20 @@ static void processKeyboard(Map* map)
         }
 }
 
-static void drawBackground(tic_mem *tic)
+static void drawBackground(tic_mem *tic, void* data)
 {
+	Map* map = (Map*)data;
 	//draw map background for showing transparency on map
 	for (u8 j = 0; j < TIC80_WIDTH / TIC_SPRITESIZE; j++)
 		for (u8 i = 0; i < TIC80_HEIGHT / TIC_SPRITESIZE; i++)
-			tic_api_spr(tic, &getConfig()->cart->bank0.tiles, 192, j*TIC_SPRITESIZE, i*TIC_SPRITESIZE, 1, 1, NULL, 0, 1, tic_no_flip, tic_no_rotate);
+			tic_api_spr(tic, &getConfig()->cart->bank0.tiles, map->bgsprite, j*TIC_SPRITESIZE, i*TIC_SPRITESIZE, 1, 1, NULL, 0, 1, tic_no_flip, tic_no_rotate);
 }
 
 static void tick(Map* map)
 {
     tic_mem* tic = map->tic;
-    map->tickCounter++;
 
+    map->tickCounter++;
     processKeyboard(map);
 
     //drawMapReg(map); //draw map field
@@ -1276,7 +1311,6 @@ static void tock(tic_mem* tic, void* data)
 	Map* map = (Map*)data;
 
 	//map->tickCounter++;
-
 	//processKeyboard(map);
 
 	drawMapReg(map); //draw map field
@@ -1298,8 +1332,8 @@ static void onStudioEvent(Map* map, StudioEvent event)
 
 static void scanline(tic_mem* tic, s32 row, void* data)
 {
-    if(row == 0)
-        memcpy(&tic->ram.vram.palette, getBankPalette(), sizeof(tic_palette));
+   // if(row == 0)
+     //   memcpy(&tic->ram.vram.palette, getBankPalette(), sizeof(tic_palette));
 }
 
 static void overline(tic_mem* tic, void* data)
@@ -1354,6 +1388,9 @@ void initMap(Map* map, tic_mem* tic, tic_map* src, tic_mapflags* mflags)
         .src = src,
 		.src_flags = mflags,
 		.page = 0,
+		.erase = false,
+		.bgsprite_init = getConfig()->theme.map.bg_sprite_init,
+		.bgsprite = getConfig()->theme.map.bg_sprite_init,
         .mode = MAP_DRAW_MODE,
         .canvas = 
         {

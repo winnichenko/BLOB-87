@@ -38,6 +38,8 @@ struct Map
 	u8 page; //spritesheet page 8x256 sprites
 
 	bool erase;
+	u16 bgsprite;
+	u16 bgsprite_init;
 
     enum
     {
@@ -97,7 +99,7 @@ struct Map
     void (*scanline)(tic_mem* tic, s32 row, void* data);
     void (*overline)(tic_mem* tic, void* data);
 	void (*background)(tic_mem* tic);
-	void (*tock)(tic_mem* tic);
+	void (*tock)(tic_mem* tic, void* data);
 };
 
 void initMap(Map*, tic_mem*, tic_map* src, tic_mapflags* mflags);

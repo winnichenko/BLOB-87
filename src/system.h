@@ -154,6 +154,18 @@ typedef struct
 
         } gamepad;
 
+		struct
+		{
+			u16 bg_sprite;
+			u16 bg_sprite_init;
+		} sprite;
+
+		struct
+		{
+			u16 bg_sprite;
+			u16 bg_sprite_init;
+		} map;
+
     } theme;
 
     s32 gifScale;

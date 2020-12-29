@@ -1868,6 +1868,7 @@ static void studioTick()
 				//memcpy(tic->ram.vram.palette.data, getConfig()->cart->bank0.palette.data, sizeof(tic_palette));
                 overline = sprite->overline;
                 scanline = sprite->scanline;
+				tock = sprite->tock;
                 data = sprite;
             }
             break;
@@ -1876,7 +1877,7 @@ static void studioTick()
                 Map* map = impl.banks.map[impl.bank.index.map];
 				//memcpy(&tic->ram.vram.palette, &tic->cart.bank0.palette, sizeof(tic_palette));
                 overline = map->overline;
-                scanline = map->scanline;
+                //scanline = map->scanline;
 				background = map->background;
 				tock = map->tock;
                 data = map;
@@ -1903,18 +1904,7 @@ static void studioTick()
             memcpy(tic->ram.vram.palette.data, getConfig()->cart->bank0.palette.data, sizeof(tic_palette));
             memcpy(tic->ram.font.data, impl.systemFont.data, sizeof(tic_font));
         }
-		/*
-		if (data) {
-			if (background) {
-
-				tic_core_blit_ex(tic, scanline,overline, background, data);
-			}
-			tic_core_blit_ex(tic, scanline, overline, background, data);
-		}
-		else {
-			tic_core_blit(tic);
-		}
-		*/
+		
 		
         data
             ? tic_core_blit_ex(tic, tock, scanline, overline, background, data)

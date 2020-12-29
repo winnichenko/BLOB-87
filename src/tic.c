@@ -2326,14 +2326,12 @@ void tic_core_blit_ex(tic_mem* tic, tic_tock tock, tic_scanline scanline, tic_ov
 		memcpy(machine->state.ovr.palette, pal, sizeof machine->state.ovr.palette);
 	}
 	
-	
-
 	if (scanline)
 	{
 		scanline(tic, 0, data);
 		pal = tic_tool_palette_blit(&tic->ram.vram.palette);
 	}
-
+	
 	enum { Top = (TIC80_FULLHEIGHT - TIC80_HEIGHT), Bottom = Top };
 	enum { Left = (TIC80_FULLWIDTH - TIC80_WIDTH), Right = Left };
 
@@ -2342,9 +2340,6 @@ void tic_core_blit_ex(tic_mem* tic, tic_tock tock, tic_scanline scanline, tic_ov
 	memset(&out[0 * TIC80_FULLWIDTH], pal[tic->ram.vram.vars.border], TIC80_FULLWIDTH*Top); //possibly border render
 
 	u32* rowPtr = out + (Top*TIC80_FULLWIDTH);
-	
-	
-	
 	
 	for (s32 r = 0; r < TIC80_HEIGHT; r++, rowPtr += TIC80_FULLWIDTH)
 	{
@@ -2370,24 +2365,44 @@ void tic_core_blit_ex(tic_mem* tic, tic_tock tock, tic_scanline scanline, tic_ov
 			pal = tic_tool_palette_blit(&tic->ram.vram.palette);
 		}
 	}
+	
 	if (background)
-		background(tic);
+	{
+		tic_machine* machine = (tic_machine*)tic;
+		const u32* pal_ovr = tic_tool_palette_blit(&tic->ram.vram.palette);
+		memcpy(machine->state.ovr.palette, pal_ovr, sizeof machine->state.ovr.palette);
+		background(tic, data);
+	}
 
 	if (tock)
 	{
 		{
 			tic_machine* machine = (tic_machine*)tic;
-			memcpy(machine->state.ovr.palette, pal, sizeof machine->state.ovr.palette);
+			//memcpy(&tic->ram.vram.palette, &tic->cart.bank0.palette, sizeof(tic_palette));
+			//memcpy(tic->ram.vram.palette.data, getConfig()->cart->bank0.palette.data, sizeof(tic_palette));
+			//pal = tic_tool_palette_blit(&tic->cart.bank0.palette.data);
+			//memcpy(machine->state.ovr.palette, pal, sizeof machine->state.ovr.palette);
+			const u32* p = tic_tool_palette_blit(&tic->cart.bank0.palette.data);
+			memcpy(machine->state.ovr.palette, p, sizeof machine->state.ovr.palette);
 		}
 		tock(tic, data);
 	}
 
 	memset(&out[(TIC80_FULLHEIGHT - Bottom) * TIC80_FULLWIDTH], pal[tic->ram.vram.vars.border], TIC80_FULLWIDTH*Bottom); //possibly border render
 	
-
-
-	if (overline)
+	if (overline) 
+	{
+		{
+			tic_machine* machine = (tic_machine*)tic;
+				//&impl.config->data;
+			//memcpy(machine->state.tick.p)
+			//memcpy(&tic->ram.vram.palette, &tic->cart.bank0.palette, sizeof(tic_palette));
+			//const u32* p2 = tic_tool_palette_blit(&tic->cart.bank0.palette.data);
+			const u32* p2 = tic_tool_palette_blit(&tic->ram.vram.palette);
+			memcpy(machine->state.ovr.palette, p2, sizeof machine->state.ovr.palette);
+		}
 		overline(tic, data);
+	}
 
 }
 
