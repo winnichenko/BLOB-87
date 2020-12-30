@@ -297,10 +297,9 @@ static s32 drawPenButton(Map* map, s32 x, s32 y)
     return drawToolButton(map, x, y, Icon, ICON_SIZE, "DRAW [1]", MAP_DRAW_MODE);
 }
 
-
 static s32 drawEraseButton(Map* map, s32 x, s32 y)
 {
-	static const u8 GridIcon[] =
+	static const u8 Icon[] =
 	{
 		0b00000000,
 		0b00011100,
@@ -311,30 +310,8 @@ static s32 drawEraseButton(Map* map, s32 x, s32 y)
 		0b00000000,
 		0b00000000,
 	};
-
-	x -= ICON_SIZE;
-
-	tic_rect rect = { x, y, ICON_SIZE, ICON_SIZE };
-
-	bool over = false;
-
-	if (checkMousePos(&rect))
-	{
-		setCursor(tic_cursor_hand);
-
-		over = true;
-
-		showTooltip("ERASE [0]");
-
-		if (checkMouseClick(&rect, tic_mouse_left))
-		{
-			map->erase = !map->erase;
-		}
-	}
-
-	drawBitIcon(x, y, GridIcon, map->erase ? tic_color_0 : over ? tic_color_14 : tic_color_13);
-
-	return x;
+	
+	return drawToolButton(map, x, y, Icon, ICON_SIZE, "ERASE [0]", MAP_ERASE_MODE);
 }
 
 static s32 drawBackgroundButton(Map* map, s32 x, s32 y)
@@ -431,7 +408,6 @@ static void drawMapToolbar(Map* map, s32 x, s32 y)
     tic_api_rect(map->tic, 0, 0, TIC80_WIDTH, TOOLBAR_SIZE, tic_color_12);
 
     drawTileIndex(map, TIC80_WIDTH/2 - TIC_FONT_WIDTH*3, y);
-	//drawTilePageNum(map, TIC80_WIDTH-72,y);
 	if (map->map_flags.show)
 	{
 		drawFlagMode(map, TIC80_WIDTH - 72, y);
@@ -687,6 +663,44 @@ static void drawTileCursorOvr(Map* map) //draw tile white outline
     drawCursorPos(map, pos.x, pos.y);
 }
 
+static void processMouseEraseMode(Map* map)
+{
+	
+	tic_rect rect = { MAP_X, MAP_Y, MAP_WIDTH, MAP_HEIGHT };
+
+	setCursor(tic_cursor_hand);
+
+	drawTileCursor(map);
+
+	if (checkMouseDown(&rect, tic_mouse_left))
+	{
+		s32 tx = 0, ty = 0;
+		getMouseMap(map, &tx, &ty);
+
+		if (map->canvas.draw)
+		{
+			s32 w = tx - map->canvas.start.x;
+			s32 h = ty - map->canvas.start.y;
+
+			if (w % map->sheet.rect.w == 0 && h % map->sheet.rect.h == 0)
+			{
+					tic_api_mset(map->tic, map->src, tx, ty, 2048);
+			}
+		}
+		else
+		{
+			map->canvas.draw = true;
+			map->canvas.start = (tic_point) { tx, ty };
+		}
+	}
+	else
+	{
+		map->canvas.draw = false;
+	}
+	
+}
+
+
 static void processMouseDrawMode(Map* map)
 {
     tic_rect rect = {MAP_X, MAP_Y, MAP_WIDTH, MAP_HEIGHT};
@@ -707,10 +721,7 @@ static void processMouseDrawMode(Map* map)
 
 			if (w % map->sheet.rect.w == 0 && h % map->sheet.rect.h == 0)
 			{
-				if (map->erase)
-					tic_api_mset(map->tic, map->src, tx, ty, 2048);
-				else
-					setMapSprite(map, tx, ty);
+				setMapSprite(map, tx, ty);
 			}
         }
         else
@@ -1117,7 +1128,7 @@ static void drawMapReg(Map* map)
         }
         else
         {
-            static void(*const Handlers[])(Map*) = {processMouseDrawMode, processMouseDragMode, processMouseSelectMode, processMouseFillMode};
+            static void(*const Handlers[])(Map*) = {processMouseEraseMode, processMouseDrawMode, processMouseDragMode, processMouseSelectMode, processMouseFillMode};
 
             Handlers[map->mode](map);
 
@@ -1256,6 +1267,7 @@ static void processKeyboard(Map* map)
     else
     {
         if(keyWasPressed(tic_key_tab)) setStudioMode(TIC_WORLD_MODE);
+        else if(keyWasPressed(tic_key_0)) map->mode = MAP_ERASE_MODE;
         else if(keyWasPressed(tic_key_1)) map->mode = MAP_DRAW_MODE;
         else if(keyWasPressed(tic_key_2)) map->mode = MAP_DRAG_MODE;
         else if(keyWasPressed(tic_key_3)) map->mode = MAP_SELECT_MODE;
@@ -1265,7 +1277,7 @@ static void processKeyboard(Map* map)
         else if(keyWasPressed(tic_key_delete)) deleteSelection(map);
         else if(keyWasPressed(tic_key_grave)) map->canvas.grid = !map->canvas.grid;
 		else if(keyWasPressed(tic_key_f)) { map->map_flags.show = !map->map_flags.show; }
-		else if (keyWasPressed(tic_key_b)) { map->bgsprite += 1; if (map->bgsprite > map->bgsprite_init+3) map->bgsprite = map->bgsprite_init; } // not good need separate variables for current and default bg_sprites
+		else if (keyWasPressed(tic_key_b)) { map->bgsprite += 1; if (map->bgsprite > map->bgsprite_init+3) map->bgsprite = map->bgsprite_init; } 
 
     }
 
@@ -1359,6 +1371,7 @@ static void overline(tic_mem* tic, void* data)
         {
             switch(map->mode)
             {
+			case MAP_ERASE_MODE:
             case MAP_DRAW_MODE:
             case MAP_FILL_MODE:
                 drawTileCursorOvr(map);
@@ -1388,7 +1401,6 @@ void initMap(Map* map, tic_mem* tic, tic_map* src, tic_mapflags* mflags)
         .src = src,
 		.src_flags = mflags,
 		.page = 0,
-		.erase = false,
 		.bgsprite_init = getConfig()->theme.map.bg_sprite_init,
 		.bgsprite = getConfig()->theme.map.bg_sprite_init,
         .mode = MAP_DRAW_MODE,

@@ -37,17 +37,16 @@ struct Map
 
 	u8 page; //spritesheet page 8x256 sprites
 
-	bool erase;
 	u16 bgsprite;
 	u16 bgsprite_init;
 
     enum
     {
-        MAP_DRAW_MODE = 0,
+		MAP_ERASE_MODE = 0,
+		MAP_DRAW_MODE,
         MAP_DRAG_MODE,
         MAP_SELECT_MODE,
         MAP_FILL_MODE,
-		//MAP_ERASE_MODE,
     } mode;
 
     struct
