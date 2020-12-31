@@ -452,7 +452,7 @@ static void drawMap(tic_machine* machine, const tic_map* src, const tic_tiles* t
         }
 }
 
-static void drawFlags(tic_machine* machine, const tic_mapflags* src, const tic_tiles* tiles, s32 x, s32 y, s32 width, s32 height, s32 sx, s32 sy, u8 chromakey)
+static void drawFlags(tic_machine* machine, const tic_mapflags* src, const tic_tiles* tiles, s32 x, s32 y, s32 width, s32 height, s32 sx, s32 sy, bool f)
 {
 	const s32 size = TIC_SPRITESIZE;
 
@@ -470,7 +470,16 @@ static void drawFlags(tic_machine* machine, const tic_mapflags* src, const tic_t
 			s32 index = mi + mj * TIC_MAP_WIDTH;
 			RemapResult tile = { *(src->data + index), tic_no_flip, tic_no_rotate };
 
-			drawTile(machine, tiles->data + tile.index+256, ii, jj, &chromakey, 1, 1, tic_no_flip, tic_no_rotate);
+			if (tile.index != 0) {
+				if (f) 
+				{
+					drawChar(machine, 70, ii, jj, 1, 1, tic_color_12, 1);
+				}
+				else
+				{
+					drawTile(machine, tiles->data + tile.index + 256, ii, jj, NULL, 1, 1, tic_no_flip, tic_no_rotate);
+				}
+			}
 		}
 }
 
@@ -1250,9 +1259,9 @@ void tic_api_map(tic_mem* memory, const tic_map* src, const tic_tiles* tiles, s3
     drawMap((tic_machine*)memory, src, tiles, x, y, width, height, sx, sy, chromakey, scale, remap, data);
 }
 
-void tic_api_flagmap(tic_mem* memory, const tic_mapflags* src, const tic_tiles* tiles, s32 x, s32 y, s32 width, s32 height, s32 sx, s32 sy, u8 chromakey)
+void tic_api_flagmap(tic_mem* memory, const tic_mapflags* src, const tic_tiles* tiles, s32 x, s32 y, s32 width, s32 height, s32 sx, s32 sy, bool f)
 {
-	drawFlags((tic_machine*)memory, src, tiles, x, y, width, height, sx, sy, chromakey);
+	drawFlags((tic_machine*)memory, src, tiles, x, y, width, height, sx, sy,f);
 }
 
 

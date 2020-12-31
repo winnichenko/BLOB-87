@@ -66,6 +66,14 @@ struct Map
 
 	struct
 	{
+		enum
+		{
+			MAP_FLAGS_OFF=0,
+			MAP_FLAGS_DRAW,
+			MAP_FLAGS_DRAW_F,
+			MAP_FLAGS_DRAW_OVER,
+		} mode;
+
 		bool show;
 		u8 current_flag;
 	} map_flags;
