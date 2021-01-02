@@ -34,6 +34,9 @@ struct Sprite
 
     u32 tickCounter;
 
+	u16 bgsprite;
+	u16 bgsprite_init;
+
     u16 index;
     u8 color;
     u8 color2;
@@ -42,6 +45,7 @@ struct Sprite
 	s32 LastDrawX;
 	s32 LastDrawY;
 
+	
     bool editPalette;
 
     struct
@@ -55,6 +59,7 @@ struct Sprite
 
     enum
     {
+        SPRITE_ERASE_MODE,
         SPRITE_DRAW_MODE,
         SPRITE_PICK_MODE,
         SPRITE_SELECT_MODE,
@@ -67,6 +72,7 @@ struct Sprite
     void (*event)(Sprite*, StudioEvent);
     void (*scanline)(tic_mem* tic, s32 row, void* data);
     void (*overline)(tic_mem* tic, void* data);
+    void (*background)(tic_mem* tic, void* data);
 	void (*tock)(tic_mem* tic, void* data);
 };
 

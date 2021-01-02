@@ -105,7 +105,7 @@ struct Map
     void (*event)(Map*, StudioEvent);
     void (*scanline)(tic_mem* tic, s32 row, void* data);
     void (*overline)(tic_mem* tic, void* data);
-	void (*background)(tic_mem* tic);
+	void (*background)(tic_mem* tic, void* data);
 	void (*tock)(tic_mem* tic, void* data);
 };
 

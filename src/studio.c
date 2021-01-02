@@ -1867,7 +1867,8 @@ static void studioTick()
                 Sprite* sprite = impl.banks.sprite[impl.bank.index.sprites];
 				//memcpy(tic->ram.vram.palette.data, getConfig()->cart->bank0.palette.data, sizeof(tic_palette));
                 overline = sprite->overline;
-                scanline = sprite->scanline;
+                //scanline = sprite->scanline;
+				background = sprite->background;
 				tock = sprite->tock;
                 data = sprite;
             }

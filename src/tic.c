@@ -412,7 +412,8 @@ static void drawTile(tic_machine* machine, const tic_tile* buffer, s32 x, s32 y,
                 i = iy * TIC_SPRITESIZE + ix;
             }
             u8 color = tic_tool_peek(buffer, i);
-            if(mapping[color] != 255) drawRect(machine, xx, y, scale, scale, color);
+            //if(mapping[color] != 255) drawRect(machine, xx, y, scale, scale, color);
+            if(color != 255) drawRect(machine, xx, y, scale, scale, color);
         }
     }
 }
@@ -830,6 +831,7 @@ static void drawSprite(tic_mem* memory, const tic_tiles* src, s32 index, s32 x, 
 
 void tic_api_spr(tic_mem* memory, const tic_tiles* src, s32 index, s32 x, s32 y, s32 w, s32 h, u8* colors, s32 count, s32 scale, tic_flip flip, tic_rotate rotate)
 {
+	if (index == 2048 || index<0) return;
     s32 step = TIC_SPRITESIZE * scale;
 
     const tic_flip vert_horz_flip = tic_horz_flip | tic_vert_flip;
@@ -947,7 +949,8 @@ s32 drawFixedSpriteFont(tic_mem* memory, u8 index, s32 x, s32 y, s32 width, s32 
 
 u8 tic_api_pix(tic_mem* memory, s32 x, s32 y, u8 color, bool get)
 {
-    tic_machine* machine = (tic_machine*)memory;
+	if (color == 255) return;
+	tic_machine* machine = (tic_machine*)memory;
 
     if(get) return getPixel(machine, x, y);
 
