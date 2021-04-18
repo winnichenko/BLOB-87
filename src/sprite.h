@@ -45,8 +45,8 @@ struct Sprite
 	s32 LastDrawX;
 	s32 LastDrawY;
 
-	
     bool editPalette;
+	bool moveColor;
 
     struct
     {

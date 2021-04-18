@@ -933,10 +933,10 @@ static void drawPasteDataOvr(Map* map)
 
 static void normalizeMapRect(s32* x, s32* y)
 {
-    while(*x < 0) *x += TIC_MAP_WIDTH;
-    while(*y < 0) *y += TIC_MAP_HEIGHT;
-    while(*x >= TIC_MAP_WIDTH) *x -= TIC_MAP_WIDTH;
-    while(*y >= TIC_MAP_HEIGHT) *y -= TIC_MAP_HEIGHT;
+	while (*x < 0) *x += TIC_MAP_WIDTH;
+	while (*y < 0) *y += TIC_MAP_HEIGHT;
+	while (*x >= TIC_MAP_WIDTH) *x -= TIC_MAP_WIDTH;
+	while (*y >= TIC_MAP_HEIGHT) *y -= TIC_MAP_HEIGHT;
 }
 
 static void processMouseSelectMode(Map* map)
@@ -1284,7 +1284,7 @@ static void copySelectionToClipboard(Map* map) //doesnt work with 256-2047 index
                 for(s32 i = sel->x; i < sel->x+sel->w; i++)
                 {
                     s32 x = i, y = j;
-                    normalizeMapRect(&x, &y);
+                    //normalizeMapRect(&x, &y);
 
                     s32 index = x + y * TIC_MAP_WIDTH;
                     *ptr++ = map->src->data[index];

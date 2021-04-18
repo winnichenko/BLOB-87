@@ -1057,6 +1057,309 @@ static void pasteColor(Sprite* sprite)
     fromClipboard(&getBankPalette()->colors[sprite->color], sizeof(tic_rgb), false, true);
 }
 
+static void setRGBComponent(u8* data, u8 value)
+{
+	(*data)=value;
+}
+
+static void drawHGradientButton(Sprite *sprite, s32 x, s32 y)
+{
+	enum { Size = 5 };
+	static const u8 Icon[] =
+	{
+		0b10111000,
+		0b01000000,
+		0b10111000,
+		0b01000000,
+		0b10111000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+	};
+
+	tic_rect rect = { x, y, Size, Size };
+	bool over = false;
+	bool down = false;
+
+	if (checkMousePos(&rect))
+	{
+		setCursor(tic_cursor_hand);
+
+		showTooltip("MAKE H GRADIENT");
+		over = true;
+
+		if (checkMouseDown(&rect, tic_mouse_left))
+			down = true;
+
+		if (checkMouseClick(&rect, tic_mouse_left))
+		{
+			enum { Count = sizeof(tic_rgb) };
+
+			u8 c1 = sprite->color;
+			u8 c2 = sprite->color2;
+
+			if (c1 == c2) return;
+
+			if (c2 < c1)
+				SWAP(c1, c2, u8);
+
+			u8* data = &getBankPalette()->data[c1*Count];
+			u8* data2 = &getBankPalette()->data[c2*Count];
+			u8 diff = c2 - c1;
+
+			u8 r1, g1, b1, r2, g2, b2, ri, gi, bi;
+
+			r1 = data[0];
+			g1 = data[1];
+			b1 = data[2];
+
+			r2 = data2[0];
+			g2 = data2[1];
+			b2 = data2[2];
+
+			for (u8 j = 0; j <= diff; j++)
+			{
+				ri = r1 + j * (r2 - r1) / diff;
+				gi = g1 + j * (g2 - g1) / diff;
+				bi = b1 + j * (b2 - b1) / diff;
+
+				setRGBComponent(&data[j * 3], ri);
+				setRGBComponent(&data[j * 3 + 1], gi);
+				setRGBComponent(&data[j * 3 + 2], bi);
+			}
+		}
+	}
+
+	if (down)
+	{
+		drawBitIcon(rect.x, rect.y + 1, Icon, tic_color_13);
+	}
+	else
+	{
+		drawBitIcon(rect.x, rect.y + 1, Icon, tic_color_0);
+		drawBitIcon(rect.x, rect.y, Icon, (over ? tic_color_13 : tic_color_12));
+	}
+
+}
+
+static void drawVGradientButton(Sprite *sprite, s32 x, s32 y)
+{
+	enum { Size = 5 };
+	static const u8 Icon[] =
+	{
+		0b10101000,
+		0b01010000,
+		0b10101000,
+		0b10101000,
+		0b10101000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+	};
+
+	tic_rect rect = { x, y, Size, Size };
+	bool over = false;
+	bool down = false;
+
+	if (checkMousePos(&rect))
+	{
+		setCursor(tic_cursor_hand);
+
+		showTooltip("MAKE V GRADIENT");
+		over = true;
+
+		if (checkMouseDown(&rect, tic_mouse_left))
+			down = true;
+
+		if (checkMouseClick(&rect, tic_mouse_left))
+		{
+			enum { Count = sizeof(tic_rgb) };
+
+			u8 c1 = sprite->color;
+			u8 c2 = sprite->color2;
+
+			if (c1 == c2) return;
+
+			if (c2 < c1)
+				SWAP(c1, c2, u8);
+
+			u8* data = &getBankPalette()->data[c1*Count];
+			u8* data2 = &getBankPalette()->data[c2*Count];
+			u8 diff = c2/8 - c1/8;
+
+			if (diff != 0) {
+				u8 r1, g1, b1, r2, g2, b2, ri, gi, bi;
+
+				r1 = data[0];
+				g1 = data[1];
+				b1 = data[2];
+
+				r2 = data2[0];
+				g2 = data2[1];
+				b2 = data2[2];
+				for (u8 j = 0; j <= diff; j++)
+				{
+					ri = r1 + j*8 * (r2 - r1) / diff;
+					gi = g1 + j*8 * (g2 - g1) / diff;
+					bi = b1 + j*8 * (b2 - b1) / diff;
+
+					setRGBComponent(&data[j*8 * 3], ri);
+					setRGBComponent(&data[j*8 * 3 + 1], gi);
+					setRGBComponent(&data[j*8 * 3 + 2], bi);
+				}
+			}
+		}
+	}
+
+	if (down)
+	{
+		drawBitIcon(rect.x, rect.y + 1, Icon, tic_color_13);
+	}
+	else
+	{
+		drawBitIcon(rect.x, rect.y + 1, Icon, tic_color_0);
+		drawBitIcon(rect.x, rect.y, Icon, (over ? tic_color_13 : tic_color_12));
+	}
+}
+
+static void drawPasteColorButton(Sprite* sprite, s32 x, s32 y)
+{
+	enum { Size = 5 };
+	static const u8 Icon[] =
+	{
+		0b01110000,
+		0b10001000,
+		0b11111000,
+		0b11011000,
+		0b11111000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+	};
+
+	tic_rect rect = { x, y, Size, Size };
+	bool over = false;
+	bool down = false;
+
+	if (checkMousePos(&rect))
+	{
+		setCursor(tic_cursor_hand);
+
+		showTooltip("PASTE COLOR");
+		over = true;
+
+		if (checkMouseDown(&rect, tic_mouse_left))
+			down = true;
+
+		if (checkMouseClick(&rect, tic_mouse_left))
+			fromClipboard(&getBankPalette()->colors[sprite->color], sizeof(tic_rgb), false, false);
+	}
+
+	if (down)
+	{
+		drawBitIcon(rect.x, rect.y + 1, Icon, tic_color_13);
+	}
+	else
+	{
+		drawBitIcon(rect.x, rect.y + 1, Icon, tic_color_0);
+		drawBitIcon(rect.x, rect.y, Icon, (over ? tic_color_13 : tic_color_12));
+	}
+}
+
+static void drawCopyColorButton(Sprite* sprite, s32 x, s32 y)
+{
+	enum { Size = 5 };
+	static const u8 Icon[] =
+	{
+		0b11110000,
+		0b10010000,
+		0b10111000,
+		0b11101000,
+		0b00111000,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+	};
+
+	tic_rect rect = { x, y, Size, Size };
+
+	bool over = false;
+	bool down = false;
+
+	if (checkMousePos(&rect))
+	{
+		setCursor(tic_cursor_hand);
+
+		showTooltip("COPY COLOR");
+		over = true;
+
+		if (checkMouseDown(&rect, tic_mouse_left))
+			down = true;
+
+		if (checkMouseClick(&rect, tic_mouse_left))
+			toClipboard(&getBankPalette()->colors[sprite->color], sizeof(tic_rgb), false);
+	}
+
+	if (down)
+	{
+		drawBitIcon(rect.x, rect.y + 1, Icon, tic_color_13);
+	}
+	else
+	{
+		drawBitIcon(rect.x, rect.y + 1, Icon, tic_color_0);
+		drawBitIcon(rect.x, rect.y, Icon, (over ? tic_color_13 : tic_color_12));
+	}
+}
+
+static void drawMoveColorButton(Sprite *sprite, s32 x, s32 y)
+{
+	enum { Size = 5 };
+	static const u8 Icon[] =
+	{
+		0b00100000,
+		0b01101000,
+		0b11101100,
+		0b01101110,
+		0b00101100,
+		0b00001000,
+		0b00000000,
+		0b00000000,
+	};
+
+	tic_rect rect = { x, y, Size, Size };
+	bool over = false;
+	bool down = false;
+
+	if (checkMousePos(&rect))
+	{
+		setCursor(tic_cursor_hand);
+
+		showTooltip("MOVE COLOR");
+		over = true;
+
+		if (checkMouseDown(&rect, tic_mouse_left))
+			down = true;
+
+		if (checkMouseClick(&rect, tic_mouse_left))
+		{
+			enum { Count = sizeof(tic_rgb) };
+
+			u8 c1 = sprite->color;
+			sprite->moveColor = !sprite->moveColor;
+		}
+	}
+
+	if (down)
+	{
+		drawBitIcon(rect.x, rect.y + 1, Icon, tic_color_13);
+	}
+	else
+	{
+		drawBitIcon(rect.x, rect.y + 1, Icon, tic_color_0);
+		drawBitIcon(rect.x, rect.y, Icon, sprite->moveColor ? tic_color_2:(over ? tic_color_13 : tic_color_12));
+	}
+}
+
 static void drawRGBTools(Sprite* sprite, s32 x, s32 y)
 {
     {
@@ -1147,6 +1450,12 @@ static void drawRGBTools(Sprite* sprite, s32 x, s32 y)
             drawBitIcon(rect.x, rect.y, Icon, (over ? tic_color_13 : tic_color_12));
         }
     }
+
+	drawCopyColorButton(sprite, x, y+8);
+	drawPasteColorButton(sprite, x+8, y+8);
+	drawHGradientButton(sprite,x,y+16);
+	drawVGradientButton(sprite,x+8,y+16);
+	drawMoveColorButton(sprite,x,y+24);
 }
 
 static void drawRGBSliders(Sprite* sprite, s32 x, s32 y)
@@ -1705,6 +2014,72 @@ static void redo(Sprite* sprite)
     history_redo(sprite->history);
 }
 
+static void upColor(Sprite* sprite)
+{
+	if (sprite->color < 8) return;
+	u8 index = sprite->color;
+
+	tic_rgb buffer[63];
+	tic_rgb clipboard;
+	
+	memcpy(&buffer, getBankPalette()->data, sizeof(tic_rgb) * 64);
+	memcpy(&clipboard, &buffer[index], sizeof(tic_rgb));
+	memcpy(&buffer[index], &buffer[index-8], sizeof(tic_rgb));
+	memcpy(&buffer[index-8], &clipboard, sizeof(tic_rgb));
+	memcpy(&getBankPalette()->data,&buffer, sizeof(tic_rgb) * 64);
+
+	sprite->color-=8;
+}
+
+static void downColor(Sprite* sprite)
+{
+	if (sprite->color > 55) return;
+	u8 index = sprite->color;
+
+	tic_rgb buffer[63];
+	tic_rgb clipboard;
+
+	memcpy(&buffer, getBankPalette()->data, sizeof(tic_rgb) * 64);
+	memcpy(&clipboard, &buffer[index], sizeof(tic_rgb));
+	memcpy(&buffer[index], &buffer[index + 8], sizeof(tic_rgb));
+	memcpy(&buffer[index + 8], &clipboard, sizeof(tic_rgb));
+	memcpy(&getBankPalette()->data, &buffer, sizeof(tic_rgb) * 64);
+
+	sprite->color += 8;
+}
+
+static void leftColor(Sprite* sprite)
+{
+	//if (sprite->color % 8==0) return;
+	if (sprite->color <1) return;
+	u8 index=sprite->color;
+	tic_rgb buffer[1];
+
+	buffer[0] = getBankPalette()->colors[index];
+	buffer[1] = getBankPalette()->colors[index-1];
+
+	toClipboard(&buffer, sizeof(tic_rgb)*2, false);
+	fromClipboard(getBankPalette()->data, sizeof(tic_palette), false, false);
+	fromClipboard(&getBankPalette()->colors[index-1], sizeof(tic_rgb)*2, false, false);
+	sprite->color--;
+}
+
+static void rightColor(Sprite* sprite)
+{
+	//if (sprite->color % 8==7) return;
+	if (sprite->color>62) return;
+	u8 index = sprite->color;
+	tic_rgb buffer[1];
+
+	buffer[0] = getBankPalette()->colors[index+1];
+	buffer[1] = getBankPalette()->colors[index];
+
+	toClipboard(&buffer, sizeof(tic_rgb) * 2, false);
+	fromClipboard(getBankPalette()->data, sizeof(tic_palette), false, false);
+	fromClipboard(&getBankPalette()->colors[index], sizeof(tic_rgb) * 2, false, false);
+	sprite->color++;
+}
+
 static void switchBanks(Sprite* sprite)
 {
     //bool bg = sprite->index < TIC_BANK_SPRITES;
@@ -1758,13 +2133,23 @@ static void processKeyboard(Sprite* sprite)
         }
         else
         {
-            if(keyWasPressed(tic_key_up))           upSprite(sprite);
-            else if(keyWasPressed(tic_key_down))    downSprite(sprite);
-            else if(keyWasPressed(tic_key_left))    leftSprite(sprite);
-            else if(keyWasPressed(tic_key_right))   rightSprite(sprite);
-            else if(keyWasPressed(tic_key_delete))  deleteSprite(sprite);
-            else if(keyWasPressed(tic_key_tab))     switchBanks(sprite);
-
+			if (sprite->moveColor)
+			{
+				if (keyWasPressed(tic_key_up))           upColor(sprite);
+				else if (keyWasPressed(tic_key_down))    downColor(sprite);
+				else if (keyWasPressed(tic_key_left))    leftColor(sprite);
+				else if (keyWasPressed(tic_key_right))   rightColor(sprite);
+				if (keyWasPressed(tic_key_escape)) sprite->moveColor=false;
+			}
+			else
+			{
+				if (keyWasPressed(tic_key_up))           upSprite(sprite);
+				else if (keyWasPressed(tic_key_down))    downSprite(sprite);
+				else if (keyWasPressed(tic_key_left))    leftSprite(sprite);
+				else if (keyWasPressed(tic_key_right))   rightSprite(sprite);
+				else if (keyWasPressed(tic_key_delete))  deleteSprite(sprite);
+				else if (keyWasPressed(tic_key_tab))     switchBanks(sprite);
+			}
             if(!sprite->editPalette)
             {
 
@@ -2062,6 +2447,7 @@ void initSprite(Sprite* sprite, tic_mem* tic, tic_tiles* src)
         .color2 = 0,
         .size = TIC_SPRITESIZE,
         .editPalette = false,
+		.moveColor = false,
         .brushSize = 1,
 		.LastDrawX=0,
 		.LastDrawY=0,
