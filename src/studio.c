@@ -1886,9 +1886,12 @@ static void studioTick()
             break;
         case TIC_WORLD_MODE:
             {
-                overline = impl.world->overline;
-                scanline = impl.world->scanline;
-                data = impl.world;
+				World* world = impl.world;
+                overline = world->overline;
+                //scanline = world->scanline;
+				background = world->background;
+				tock = world->tock;
+                data = world;
             }
             break;
         case TIC_SURF_MODE:

@@ -34,9 +34,23 @@ struct World
 
     void* preview;
 
+	struct
+	{
+		s32 x;
+		s32 y;
+
+		tic_point start;
+
+		bool active;
+		bool gesture;
+
+	} scroll;
+
     void (*tick)(World* world);
     void (*scanline)(tic_mem* tic, s32 row, void* data);
     void (*overline)(tic_mem* tic, void* data); 
+	void (*background)(tic_mem* tic, void* data);
+	void (*tock)(tic_mem* tic, void* data);
 };
 
 void initWorld(World* world, tic_mem* tic, Map* map);

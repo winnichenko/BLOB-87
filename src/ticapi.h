@@ -179,7 +179,7 @@ void tic_core_tick_start(tic_mem* memory, const tic_sfx* sfx, const tic_music* m
 void tic_core_tick(tic_mem* memory, tic_tick_data* data);
 void tic_core_tick_end(tic_mem* memory);
 void tic_core_blit(tic_mem* tic);
-void tic_core_blit_ex(tic_mem* tic, tic_tick tick, tic_scanline scanline, tic_overline overline, void* data);
+void tic_core_blit_ex(tic_mem* tic, tic_tick tick, tic_tock tock, tic_scanline scanline, tic_overline overline, void* data);
 const tic_script_config* tic_core_script_config(tic_mem* memory);
 
 typedef struct
