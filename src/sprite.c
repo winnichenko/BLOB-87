@@ -34,18 +34,18 @@
 enum
 {
     ToolbarH = TOOLBAR_SIZE,
-    CanvasX = 3*8, CanvasY = 4*8, CanvasW = CANVAS_SIZE, CanvasH = CANVAS_SIZE,//coordinates in map tiles
+    CanvasX = 3*TIC_SPRITESIZE, CanvasY = 4* TIC_SPRITESIZE, CanvasW = CANVAS_SIZE, CanvasH = CANVAS_SIZE,//coordinates in map tiles
 	FlagsX=CanvasX+CanvasW+8,FlagsY=CanvasY,
-    PaletteX = 3*8, PaletteY = 16*8, PaletteW = PALETTE_WIDTH, PaletteH = PALETTE_HEIGHT,//coordinates in map tiles
-	erase_rectX=PaletteX-16,erase_rectY=PaletteY,erase_rectW=8,erase_rectH=8,
+    PaletteX = 3* TIC_SPRITESIZE, PaletteY = 16* TIC_SPRITESIZE, PaletteW = PALETTE_WIDTH, PaletteH = PALETTE_HEIGHT,//coordinates in map tiles
+	Erase_rectX=PaletteX-16,Erase_rectY=PaletteY,Erase_rectW=TIC_SPRITESIZE,Erase_rectH=TIC_SPRITESIZE,
 	ToolsX = CanvasX-16, ToolsY = CanvasY+CanvasH+12,
 	RGBSlidersX=PaletteX,RGBSlidersY=PaletteY+PaletteH+8,
 	RGBToolsX=PaletteX-18,RGBToolsY=PaletteY+16,
     //SheetX = TIC80_WIDTH - TIC_SPRITESHEET_SIZE - 1, SheetY = CanvasY, SheetW = TIC_SPRITESHEET_SIZE, SheetH = TIC_SPRITESHEET_SIZE,
-    SheetX = 15*8, SheetY = CanvasY, SheetW = TIC_SPRITESHEET_SIZE, SheetH = TIC_SPRITESHEET_SIZE,
+    SheetX = 15* TIC_SPRITESIZE, SheetY = CanvasY, SheetW = TIC_SPRITESHEET_SIZE, SheetH = TIC_SPRITESHEET_SIZE,
 };
 
-tic_rect erase_rect = {erase_rectX,erase_rectY,erase_rectW,erase_rectH};
+tic_rect Erase_rect = {Erase_rectX,Erase_rectY,Erase_rectW,Erase_rectH};
 
 // !TODO: move it to helpers place
 static void drawPanelBorder(tic_mem* tic, s32 x, s32 y, s32 w, s32 h)
@@ -860,8 +860,8 @@ static void drawMoveButtons(Sprite* sprite)
 {
     if(hasCanvasSelection(sprite))
     {
-        enum { x = 24 };
-        enum { y = 20 };
+        enum { x = CanvasX};
+        enum { y = CanvasY};
 
         static const u8 Icons[] = 
         {
@@ -1508,14 +1508,14 @@ static void drawPaletteOvr(Sprite* sprite, s32 x, s32 y)
         }
     }
 
-	if (checkMousePos(&erase_rect))
+	if (checkMousePos(&Erase_rect))
 	{
 		setCursor(tic_cursor_hand);
 		
 		SHOW_TOOLTIP("Transparent", 255);
 
-		bool left = checkMouseDown(&erase_rect, tic_mouse_left);
-		bool right = checkMouseDown(&erase_rect, tic_mouse_right);
+		bool left = checkMouseDown(&Erase_rect, tic_mouse_left);
+		bool right = checkMouseDown(&Erase_rect, tic_mouse_right);
 
 		if (left || right)
 		{
@@ -1548,7 +1548,7 @@ static void drawPaletteOvr(Sprite* sprite, s32 x, s32 y)
         tic_api_rectb(tic, offsetX - 1, offsetY - 1, PALETTE_CELL_SIZE + 1, PALETTE_CELL_SIZE + 1, tic_color_12);//color 1 selected border
 	}
 	else
-		tic_api_rectb(tic,erase_rect.x,erase_rect.y,erase_rect.w,erase_rect.h,tic_color_12);
+		tic_api_rectb(tic,Erase_rect.x,Erase_rect.y,Erase_rect.w,Erase_rect.h,tic_color_12);
 	
     {
         static const u16 Icon[] = 
@@ -1576,7 +1576,7 @@ static void drawPaletteOvr(Sprite* sprite, s32 x, s32 y)
 			drawBitIcon16(tic, offsetX - 1, offsetY - 1, Icon, tic_color_12); //color 2 selected border
 		}
 		else
-			drawBitIcon16(tic, erase_rect.x, erase_rect.y, Icon, tic_color_12);
+			drawBitIcon16(tic, Erase_rect.x, Erase_rect.y, Icon, tic_color_12);
     }
 
     {

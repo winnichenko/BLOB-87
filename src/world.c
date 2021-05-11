@@ -205,7 +205,6 @@ static void drawBackground(tic_mem *tic, void* data)
 	//draw map background for showing transparency on map
 	for (u8 j = 0; j < TIC80_WIDTH / TIC_SPRITESIZE; j++)
 		for (u8 i = 0; i < TIC80_HEIGHT / TIC_SPRITESIZE; i++)
-			//tic_api_spr(tic, &getConfig()->cart->bank0.tiles, 192, j*TIC_SPRITESIZE, i*TIC_SPRITESIZE, 1, 1, NULL, 0, 1, tic_no_flip, tic_no_rotate);
 			tic_api_spr(tic, &getConfig()->cart->bank0.tiles, world->map->bgsprite, j*TIC_SPRITESIZE, i*TIC_SPRITESIZE, 1, 1, NULL, 0, 1, tic_no_flip, tic_no_rotate);
 }
 
@@ -237,13 +236,11 @@ void initWorld(World* world, tic_mem* tic, Map* map)
     memset(world->preview, 0, PREVIEW_SIZE);
     s32 colors[TIC_PALETTE_SIZE];
 
-    //for(s32 i = 0; i < TIC80_WIDTH * TIC80_HEIGHT; i++)
     for(s32 i = 0; i < TIC_MAP_WIDTH * TIC_MAP_HEIGHT; i++)
     {
         //u8 index = getBankMap()->data[i];
         u16 index = CLAMP(getBankMap()->data[i],0,TIC_BANK_SPRITES*2);
 
-        //if(index)
         if(index<=2047)
         {
             memset(colors, 0, sizeof colors);
