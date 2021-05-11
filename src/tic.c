@@ -234,7 +234,6 @@ static u8 getPixelDma(tic_mem* tic, s32 x, s32 y)
     tic_machine* machine = (tic_machine*)tic;
 
     return tic_tool_peek(machine->memory.ram.vram.screen.data, y * TIC80_WIDTH + x);
-    //return tic_tool_peek(machine->memory.ram.vram.screen.data, y * TIC80_WIDTH + x);
 }
 
 static void setPixel(tic_machine* machine, s32 x, s32 y, u8 color)
@@ -453,7 +452,7 @@ static void drawMap(tic_machine* machine, const tic_map* src, const tic_tiles* t
         }
 }
 
-static void drawFlags(tic_machine* machine, const tic_mapflags* src, const tic_tiles* tiles, s32 x, s32 y, s32 width, s32 height, s32 sx, s32 sy, bool f)
+static void drawFlags(tic_machine* machine, const tic_mapflags* src, const tic_tiles* tiles, s32 x, s32 y, s32 width, s32 height, s32 sx, s32 sy)
 {
 	const s32 size = TIC_SPRITESIZE;
 
@@ -471,16 +470,8 @@ static void drawFlags(tic_machine* machine, const tic_mapflags* src, const tic_t
 			s32 index = mi + mj * TIC_MAP_WIDTH;
 			RemapResult tile = { *(src->data + index), tic_no_flip, tic_no_rotate };
 
-			if (tile.index != 0) {
-				if (f) 
-				{
-					drawChar(machine, 70, ii, jj, 1, 1, tic_color_12, 1);
-				}
-				else
-				{
+			if (tile.index != 0)
 					drawTile(machine, tiles->data + tile.index + 256, ii, jj, NULL, 1, 1, tic_no_flip, tic_no_rotate);
-				}
-			}
 		}
 }
 
@@ -831,7 +822,7 @@ static void drawSprite(tic_mem* memory, const tic_tiles* src, s32 index, s32 x, 
 
 void tic_api_spr(tic_mem* memory, const tic_tiles* src, s32 index, s32 x, s32 y, s32 w, s32 h, u8* colors, s32 count, s32 scale, tic_flip flip, tic_rotate rotate)
 {
-	if (index == 2048 || index<0) return;
+	if (index > 2047 || index<0) return;
     s32 step = TIC_SPRITESIZE * scale;
 
     const tic_flip vert_horz_flip = tic_horz_flip | tic_vert_flip;
@@ -1262,9 +1253,9 @@ void tic_api_map(tic_mem* memory, const tic_map* src, const tic_tiles* tiles, s3
     drawMap((tic_machine*)memory, src, tiles, x, y, width, height, sx, sy, chromakey, scale, remap, data);
 }
 
-void tic_api_flagmap(tic_mem* memory, const tic_mapflags* src, const tic_tiles* tiles, s32 x, s32 y, s32 width, s32 height, s32 sx, s32 sy, bool f)
+void tic_api_flagmap(tic_mem* memory, const tic_mapflags* src, const tic_tiles* tiles, s32 x, s32 y, s32 width, s32 height, s32 sx, s32 sy)
 {
-	drawFlags((tic_machine*)memory, src, tiles, x, y, width, height, sx, sy,f);
+	drawFlags((tic_machine*)memory, src, tiles, x, y, width, height, sx, sy);
 }
 
 

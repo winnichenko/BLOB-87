@@ -419,7 +419,7 @@ static void drawTileIndex(Map* map, s32 x, s32 y) //draw tile index on a toolbar
         }
     }
 
-    if(index >= 0)
+    if(index <= 2047) // !!!!!!!!! sometimes show #-01
     {
         char buf[] = "#999";
         sprintf(buf, "#%03i", index);
@@ -429,12 +429,10 @@ static void drawTileIndex(Map* map, s32 x, s32 y) //draw tile index on a toolbar
 
 static void drawTilePageNum(Map* map, s32 x, s32 y) //draw tile index on a toolbar
 {
-	//s32 index = -1;
 	char buf[] = "P9"; 
 	sprintf(buf, "P%i", map->page);
 
 	tic_api_print(map->tic, buf, x, y, tic_color_14,1);
-
 }
 
 static void drawMapToolbar(Map* map, s32 x, s32 y)
@@ -484,7 +482,6 @@ static void drawSheetOvr(Map* map, s32 x, s32 y) // white border around map spri
 {
     if(!sheetVisible(map))return;
 
-    //tic_rect rect = {x, y, TIC_SPRITESHEET_SIZE, TIC_SPRITESHEET_SIZE};
     tic_rect rect = MapSheetRect;
 
     tic_api_rectb(map->tic, rect.x - 1, rect.y - 1, rect.w + 2, rect.h + 2, tic_color_12);
@@ -497,14 +494,12 @@ static void drawSheetOvr(Map* map, s32 x, s32 y) // white border around map spri
 
         tic_api_rectb(map->tic, bx, by, bw, bh, tic_color_12);
     }
-	
 }
 
 static void drawSpriteSheet(Map* map, s32 x, s32 y) // draw spritesheet
 {
     if (!sheetVisible(map)) return;
 	if (map->map_flags.mode != MAP_FLAGS_OFF) return;
-    //tic_rect rect = {x, y, TIC_SPRITESHEET_SIZE, TIC_SPRITESHEET_SIZE};
     tic_rect rect = MapSheetRect;
 	
 	//tic_api_rect(map->tic, MapSheetRect.x-1, 0, MapSheetRect.w+2, MapSheetRect.y, tic_color_14);
@@ -525,7 +520,6 @@ static void drawSpriteSheet(Map* map, s32 x, s32 y) // draw spritesheet
 				//tic_api_print(tic, Label + (char[]) {i,'/0'}, 20, 0, tic_color_12, false, 1, false);
 				if (checkMouseClick(&rectp, tic_mouse_left))
 				{
-					//sprite->index = TIC_PAGE_SPRITES * i;
 					map->page = i;
 				}
 			}
@@ -581,7 +575,6 @@ static void drawFlagSheet(Map* map, s32 x, s32 y) // draw spritesheet
 {
 	if (!sheetVisible(map))return;
 	if (map->map_flags.mode == MAP_FLAGS_OFF) return;
-	//tic_rect rect = {x, y, TIC_SPRITESHEET_SIZE, TIC_SPRITESHEET_SIZE};
 	tic_rect rect = MapSheetRect;
 
 	//tic_api_rect(map->tic, MapSheetRect.x-1, 0, MapSheetRect.w+2, MapSheetRect.y, tic_color_14);
@@ -773,7 +766,6 @@ static void processMouseEraseMode(Map* map)
 	
 }
 
-
 static void processMouseDrawMode(Map* map)
 {
     tic_rect rect = {MAP_X, MAP_Y, MAP_WIDTH, MAP_HEIGHT};
@@ -872,7 +864,7 @@ static void drawSelectionRect(Map* map, s32 x, s32 y, s32 w, s32 h)
     for(s32 i = (y+h-1); i >= y; i--)   {tic_api_pix(map->tic, x, i, index++ % Step ? color : 0, false);}
 }
 
-static void drawPasteData(Map* map) // doesnt work with 256-2047 tiles. it stores rect in 0-255 coords, not indexes
+static void drawPasteData(Map* map)
 {
     s32 w = map->paste[0];
     s32 h = map->paste[1];
@@ -893,7 +885,7 @@ static void drawPasteData(Map* map) // doesnt work with 256-2047 tiles. it store
 
         for(s32 j = 0; j < h; j++)
             for(s32 i = 0; i < w; i++)
-                tic_api_mset(map->tic, map->src, (mx+i)%TIC_MAP_WIDTH, (my+j)%TIC_MAP_HEIGHT, data[i + j * w]);
+                tic_api_mset(map->tic, map->src, (mx+i)%(TIC_MAP_WIDTH/2), (my+j)%(TIC_MAP_HEIGHT/2), data[i + j * w]);
 
         history_add(map->history);
 
@@ -1204,11 +1196,41 @@ static void drawMapReg(Map* map)
     }
 }
 
+static void drawFlagsField(tic_mem* tic, Map* map, s32 x, s32 y, s32 sx, s32 sy, bool F)
+{
+	if (F)
+	{
+		const s32 size = TIC_SPRITESIZE;
+
+		for (s32 j = y, jj = sy; j < y + TIC_MAP_SCREEN_HEIGHT + 1; j++, jj += size)
+			for (s32 i = x, ii = sx; i < x + TIC_MAP_SCREEN_WIDTH + 1; i++, ii += size)
+			{
+				s32 mi = i;
+				s32 mj = j;
+
+				while (mi < 0) mi += TIC_MAP_WIDTH;
+				while (mj < 0) mj += TIC_MAP_HEIGHT;
+				while (mi >= TIC_MAP_WIDTH) mi -= TIC_MAP_WIDTH;
+				while (mj >= TIC_MAP_HEIGHT) mj -= TIC_MAP_HEIGHT;
+
+				s32 index = mi + mj * TIC_MAP_WIDTH;
+
+				if (map->src_flags->data[index] != 0)
+				{
+					tic_api_print(map->tic, "F", ii+1, jj+1, tic_color_0, 1);
+					tic_api_print(map->tic, "F", ii, jj, tic_color_12, 1);
+				}
+			}
+	}
+	else {
+		tic_api_flagmap(tic, map->src_flags, &getConfig()->cart->bank0.tiles, x, y,
+			TIC_MAP_SCREEN_WIDTH + 1, TIC_MAP_SCREEN_HEIGHT + 1, sx, sy);
+	}
+}
+
 static void drawFlagReg(Map* map)
 {
 	if (map->map_flags.mode == MAP_FLAGS_OFF) return;
-
-	bool f;
 
 	tic_rect rect = { MAP_X, MAP_Y, MAP_WIDTH, MAP_HEIGHT };
 
@@ -1218,19 +1240,20 @@ static void drawFlagReg(Map* map)
 	tic_mem* tic = map->tic;
 
 	if(map->map_flags.mode==MAP_FLAGS_DRAW_OVER)
-		for (s32 j = 0; j <= TIC80_HEIGHT; j ++)
-		{
-				for (s32 i = 0; i < TIC80_WIDTH; i++)
-				{
-					if(i%2==0 ^ j%2==0)
-						tic_api_pix(tic, i, j, tic_color_15, false);
-				}
-		}
-	//if (map->map_flags.mode == MAP_FLAGS_DRAW_F)f = true;
-	f = map->map_flags.mode == MAP_FLAGS_DRAW_F ? true : false;
-		tic_api_flagmap(tic, map->src_flags, &getConfig()->cart->bank0.tiles, map->scroll.x / TIC_SPRITESIZE, map->scroll.y / TIC_SPRITESIZE,
-			TIC_MAP_SCREEN_WIDTH + 1, TIC_MAP_SCREEN_HEIGHT + 1, -scrollX, -scrollY, f);
+		if(!map->scroll.active)
+			for (s32 j = 0; j <= TIC80_HEIGHT; j ++)
+			{
+					for (s32 i = 0; i < TIC80_WIDTH; i++)
+					{
+						if((i+scrollX)%2==0 ^ (j+scrollY)%2==0)
+							tic_api_pix(tic, i, j, tic_color_15, false);
+					}
+			}
+	s32 xx = map->scroll.x / TIC_SPRITESIZE;
+	s32 yy = map->scroll.y / TIC_SPRITESIZE;
 
+	drawFlagsField(tic, map, xx, yy, -scrollX, -scrollY, map->map_flags.mode == MAP_FLAGS_DRAW_F);
+	
 	//if(map->canvas.grid || map->scroll.active)
 	if (map->canvas.grid)
 		drawGrid(map);
@@ -1270,27 +1293,26 @@ static void copySelectionToClipboard(Map* map) //doesnt work with 256-2047 index
     if(sel->w > 0 && sel->h > 0)
     {   
         s32 size = sel->w * sel->h + 2;
-        u16* buffer = malloc(size);
+        u16* buffer = (u16*)malloc(size*sizeof(u16));
 
         if(buffer)
         {
             buffer[0] = sel->w;
             buffer[1] = sel->h;
 
-            //u8* ptr = buffer + 2;
             u16* ptr = buffer + 2;
 
             for(s32 j = sel->y; j < sel->y+sel->h; j++)
                 for(s32 i = sel->x; i < sel->x+sel->w; i++)
                 {
                     s32 x = i, y = j;
-                    //normalizeMapRect(&x, &y);
+                    normalizeMapRect(&x, &y);
 
                     s32 index = x + y * TIC_MAP_WIDTH;
                     *ptr++ = map->src->data[index];
                 }       
 
-            toClipboard(buffer, size, true);
+            toClipboard(buffer, size*2, true);
             free(buffer);           
         }
     }
@@ -1337,22 +1359,21 @@ static void copyFromClipboard(Map* map)
 
         if(clipboard)
         {
-            s32 size = strlen(clipboard)/2;
-
+			s32 size = strlen(clipboard)/2;
+			
             if(size > 2)
             {
-                u16* data = malloc(size);
+                u16* data = malloc(size*sizeof(u16));
 
                 str2buf(clipboard, strlen(clipboard), data, true);
 
-                if(data[0] * data[1] == size - 2)
+                if(data[0] * data[1] *2 == size-4)
                 {
                     map->paste = data;
                     map->mode = MAP_SELECT_MODE;
                 }
                 else free(data);
             }
-
             getSystem()->freeClipboardText(clipboard);
         }
     }
@@ -1473,7 +1494,7 @@ static void overline(tic_mem* tic, void* data)
 	drawFlagSheet(map, BLOB87_MAPSHEETX, BLOB87_MAPSHEETY);
     
 	tic_api_clip(tic, 0, TOOLBAR_SIZE, TIC80_WIDTH - (sheetVisible(map) ? TIC_SPRITESHEET_SIZE+2 : 0), TIC80_HEIGHT - TOOLBAR_SIZE);
-
+	
     {
         s32 screenScrollX = map->scroll.x % TIC80_WIDTH;
         s32 screenScrollY = map->scroll.y % TIC80_HEIGHT;
@@ -1481,6 +1502,7 @@ static void overline(tic_mem* tic, void* data)
         tic_api_line(tic, 0, TIC80_HEIGHT - screenScrollY, TIC80_WIDTH, TIC80_HEIGHT - screenScrollY, tic_color_14);
         tic_api_line(tic, TIC80_WIDTH - screenScrollX, 0, TIC80_WIDTH - screenScrollX, TIC80_HEIGHT, tic_color_14);
     }
+	
     tic_api_clip(tic, 0, 0, TIC80_WIDTH, TIC80_HEIGHT);
 
 
