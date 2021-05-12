@@ -1111,6 +1111,30 @@ static void processMouseFillMode(Map* map)
     }
 }
 
+static void processMapScroll(Map* map)
+{
+	tic_rect rect = { MAP_X, MAP_Y, MAP_WIDTH, MAP_HEIGHT };
+
+	tic_mem* tic = map->tic;
+
+	if (!sheetVisible(map) && checkMousePos(&rect))
+	{
+		if (tic_api_key(tic, tic_key_space))
+		{
+			processScrolling(map, checkMouseDown(&rect, tic_mouse_left) || checkMouseDown(&rect, tic_mouse_right));
+		}
+		else
+		{
+			static void(*const Handlers[])(Map*) = { processMouseEraseMode, processMouseDrawMode, processMouseDragMode, processMouseSelectMode, processMouseFillMode };
+
+			Handlers[map->mode](map);
+
+			if (map->mode != MAP_DRAG_MODE)
+				processScrolling(map, checkMouseDown(&rect, tic_mouse_right));
+		}
+	}
+}
+
 static void drawSelectionOvr(Map* map)
 {
     tic_rect* sel = &map->select.rect;
@@ -1166,8 +1190,6 @@ static void drawMapReg(Map* map)
 {
 	//if (map->map_flags.mode != MAP_FLAGS_OFF) return;
 
-	tic_rect rect = {MAP_X, MAP_Y, MAP_WIDTH, MAP_HEIGHT};
-
     s32 scrollX = map->scroll.x % TIC_SPRITESIZE;
     s32 scrollY = map->scroll.y % TIC_SPRITESIZE;
 
@@ -1177,23 +1199,6 @@ static void drawMapReg(Map* map)
 	
     if(map->canvas.grid)
         drawGrid(map);
-
-    if(!sheetVisible(map) && checkMousePos(&rect))
-    {
-        if(tic_api_key(tic, tic_key_space))
-        {
-            processScrolling(map, checkMouseDown(&rect, tic_mouse_left) || checkMouseDown(&rect, tic_mouse_right));
-        }
-        else
-        {
-            static void(*const Handlers[])(Map*) = {processMouseEraseMode, processMouseDrawMode, processMouseDragMode, processMouseSelectMode, processMouseFillMode};
-
-            Handlers[map->mode](map);
-
-            if(map->mode != MAP_DRAG_MODE)
-                processScrolling(map, checkMouseDown(&rect, tic_mouse_right));
-        }
-    }
 }
 
 static void drawFlagsField(tic_mem* tic, Map* map, s32 x, s32 y, s32 sx, s32 sy, bool F)
@@ -1240,21 +1245,20 @@ static void drawFlagReg(Map* map)
 	tic_mem* tic = map->tic;
 
 	if(map->map_flags.mode==MAP_FLAGS_DRAW_OVER)
-		if(!map->scroll.active)
-			for (s32 j = 0; j <= TIC80_HEIGHT; j ++)
-			{
-					for (s32 i = 0; i < TIC80_WIDTH; i++)
-					{
-						if((i+scrollX)%2==0 ^ (j+scrollY)%2==0)
-							tic_api_pix(tic, i, j, tic_color_15, false);
-					}
-			}
+		for (s32 j = 0; j <= TIC80_HEIGHT; j ++)
+		{
+				for (s32 i = 0; i < TIC80_WIDTH; i++)
+				{
+					if((i+scrollX)%2==0 ^ (j+scrollY)%2==0)
+						tic_api_pix(tic, i, j, tic_color_15, false);
+				}
+		}
 	s32 xx = map->scroll.x / TIC_SPRITESIZE;
 	s32 yy = map->scroll.y / TIC_SPRITESIZE;
 
 	drawFlagsField(tic, map, xx, yy, -scrollX, -scrollY, map->map_flags.mode == MAP_FLAGS_DRAW_F);
 	
-	//if(map->canvas.grid || map->scroll.active)
+	/*
 	if (map->canvas.grid)
 		drawGrid(map);
 
@@ -1274,6 +1278,7 @@ static void drawFlagReg(Map* map)
 				processScrolling(map, checkMouseDown(&rect, tic_mouse_right));
 		}
 	}
+	*/
 }
 
 static void undo(Map* map)
@@ -1449,7 +1454,7 @@ static void tick(Map* map)
 
     map->tickCounter++;
     processKeyboard(map);
-
+	processMapScroll(map);
     //drawMapReg(map); //draw map field
     //drawSpriteSheet(map, BLOB87_MAPSHEETX,BLOB87_MAPSHEETY); // draw spritesheet
 }
